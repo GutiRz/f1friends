@@ -3,14 +3,28 @@ package router
 import (
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 
-	"f1friends/backend/internal/handler/public"
+	adminhandler "f1friends/backend/internal/handler/admin"
+	publichandler "f1friends/backend/internal/handler/public"
 	"f1friends/backend/internal/middleware"
+	"f1friends/backend/internal/service"
+	"f1friends/backend/internal/store"
 )
 
 // New construye y devuelve el router con todas las rutas registradas.
-// Recibe las dependencias necesarias (por ahora ninguna; se añadirán con los handlers).
-func New() *chi.Mux {
+// Las dependencias se cablan aquí: store → service → handler.
+func New(pool *pgxpool.Pool) *chi.Mux {
+	// Capa store: acceso a base de datos.
+	equipoStore := store.NewEquipoStore(pool)
+
+	// Capa service: lógica de negocio y validaciones.
+	equipoSvc := service.NewEquipoService(equipoStore)
+
+	// Handlers: decodifican requests y escriben responses.
+	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
+	adminEquipo := adminhandler.NewEquipoHandler(equipoSvc)
+
 	r := chi.NewRouter()
 
 	// Middlewares globales aplicados a todas las rutas.
@@ -19,27 +33,23 @@ func New() *chi.Mux {
 	r.Use(chimiddleware.RealIP)    // lee X-Forwarded-For para registrar la IP real del cliente
 	r.Use(middleware.CORS)         // cabeceras CORS para el frontend Next.js
 
-	// Todas las rutas viven bajo /api/v1.
 	r.Route("/api/v1", func(r chi.Router) {
 
-		// Rutas públicas — sin autenticación.
-		r.Group(func(r chi.Router) {
-			r.Get("/health", public.Health)
+		// Health — sin prefijo de grupo, accesible en /api/v1/health.
+		r.Get("/health", publichandler.Health)
 
-			// Aquí se añadirán los handlers públicos:
-			// r.Get("/temporada-activa", public.GetTemporadaActiva)
-			// r.Get("/temporadas/{id}/calendario", public.GetCalendario)
-			// ...
+		// Rutas públicas — sin autenticación.
+		r.Route("/public", func(r chi.Router) {
+			r.Get("/equipos", publicEquipo.GetAll)
 		})
 
-		// Rutas de administración — requieren JWT (middleware aplicado al grupo).
-		r.Group(func(r chi.Router) {
+		// Rutas de administración — requieren JWT.
+		r.Route("/admin", func(r chi.Router) {
 			r.Use(middleware.Auth)
 
-			// Aquí se añadirán los handlers de administración:
-			// r.Post("/auth/login", admin.Login)
-			// r.Get("/auth/me", admin.Me)
-			// ...
+			r.Get("/equipos", adminEquipo.GetAll)
+			r.Post("/equipos", adminEquipo.Create)
+			r.Put("/equipos/{id}", adminEquipo.Update)
 		})
 	})
 

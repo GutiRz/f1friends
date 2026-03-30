@@ -37,10 +37,7 @@ func main() {
 	defer pool.Close()
 	log.Println("conexión a la base de datos establecida")
 
-	// El router recibe las dependencias que necesita.
-	// Por ahora pool no se pasa porque no hay handlers que lo usen aún.
-	_ = pool
-	r := router.New()
+	r := router.New(pool)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
