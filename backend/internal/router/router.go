@@ -23,6 +23,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	inscripcionStore := store.NewInscripcionStore(pool)
 	sesionStore := store.NewSesionStore(pool)
 	resultadoStore := store.NewResultadoSesionStore(pool)
+	clasificacionStore := store.NewClasificacionStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
@@ -32,6 +33,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	inscripcionSvc := service.NewInscripcionService(inscripcionStore)
 	sesionSvc := service.NewSesionService(sesionStore, granPremioStore)
 	resultadoSvc := service.NewResultadoSesionService(resultadoStore, sesionStore, inscripcionStore)
+	clasificacionSvc := service.NewClasificacionService(clasificacionStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
@@ -45,6 +47,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	adminInscripcion := adminhandler.NewInscripcionHandler(inscripcionSvc)
 	adminSesion := adminhandler.NewSesionHandler(sesionSvc)
 	adminResultado := adminhandler.NewResultadoHandler(resultadoSvc)
+	publicClasificacion := publichandler.NewClasificacionHandler(clasificacionSvc)
 
 	r := chi.NewRouter()
 
@@ -66,6 +69,8 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/temporada-activa", publicTemporada.GetActiva)
 			r.Get("/temporadas", publicTemporada.GetAll)
 			r.Get("/temporadas/{id}/calendario", publicGP.GetCalendario)
+			r.Get("/temporadas/{id}/clasificacion/pilotos", publicClasificacion.GetPilotos)
+			r.Get("/temporadas/{id}/clasificacion/constructores", publicClasificacion.GetConstructores)
 			r.Get("/gp/{id}", publicGP.GetByID)
 		})
 
