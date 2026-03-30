@@ -25,14 +25,28 @@ func (s *GranPremioService) GetByID(ctx context.Context, id int) (*model.GranPre
 	return s.store.GetByID(ctx, id)
 }
 
-// Create valida y crea un GP. El estado inicial siempre es "pendiente".
+// Create valida y crea un GP junto con sus sesiones base en una transacción.
+// Las sesiones se determinan automáticamente según tiene_sprint.
 func (s *GranPremioService) Create(ctx context.Context, gp model.GranPremio) (*model.GranPremio, error) {
 	gp.Nombre = strings.TrimSpace(gp.Nombre)
 	if err := validateGranPremio(gp); err != nil {
 		return nil, err
 	}
 	gp.Estado = model.EstadoPendiente
-	return s.store.Create(ctx, gp)
+	return s.store.CreateConSesiones(ctx, gp, sesionesBase(gp.TieneSprint))
+}
+
+// sesionesBase devuelve los tipos de sesión que se crean automáticamente al crear un GP.
+func sesionesBase(tieneSprint bool) []model.TipoSesion {
+	if tieneSprint {
+		return []model.TipoSesion{
+			model.TipoQualy,
+			model.TipoSprintQualy,
+			model.TipoSprint,
+			model.TipoCarrera,
+		}
+	}
+	return []model.TipoSesion{model.TipoQualy, model.TipoCarrera}
 }
 
 // Update valida y actualiza los campos editables de un GP.

@@ -21,6 +21,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	temporadaStore := store.NewTemporadaStore(pool)
 	granPremioStore := store.NewGranPremioStore(pool)
 	inscripcionStore := store.NewInscripcionStore(pool)
+	sesionStore := store.NewSesionStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
@@ -28,6 +29,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	temporadaSvc := service.NewTemporadaService(temporadaStore)
 	granPremioSvc := service.NewGranPremioService(granPremioStore)
 	inscripcionSvc := service.NewInscripcionService(inscripcionStore)
+	sesionSvc := service.NewSesionService(sesionStore, granPremioStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
@@ -39,6 +41,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	publicGP := publichandler.NewGranPremioHandler(granPremioSvc)
 	adminGP := adminhandler.NewGranPremioHandler(granPremioSvc)
 	adminInscripcion := adminhandler.NewInscripcionHandler(inscripcionSvc)
+	adminSesion := adminhandler.NewSesionHandler(sesionSvc)
 
 	r := chi.NewRouter()
 
@@ -87,8 +90,12 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Patch("/gp/{id}/estado", adminGP.UpdateEstado)
 			r.Get("/gp/{id}/inscripciones", adminInscripcion.GetAll)
 			r.Post("/gp/{id}/inscripciones", adminInscripcion.Create)
+			r.Get("/gp/{id}/sesiones", adminSesion.GetAll)
+			r.Post("/gp/{id}/sesiones", adminSesion.Create)
 
 			r.Put("/inscripciones/{id}", adminInscripcion.Update)
+
+			r.Patch("/sesiones/{id}/estado", adminSesion.UpdateEstado)
 		})
 	})
 

@@ -118,6 +118,50 @@ func (s *GranPremioStore) Update(ctx context.Context, id int, gp model.GranPremi
 	return &updated, nil
 }
 
+// CreateConSesiones inserta un GP y sus sesiones base en una transacción.
+// Si falla cualquier paso, no se persiste nada.
+// Devuelve ErrForeignKey si el temporada_id no existe.
+func (s *GranPremioStore) CreateConSesiones(ctx context.Context, gp model.GranPremio, tiposSesion []model.TipoSesion) (*model.GranPremio, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("gran_premios CreateConSesiones begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var created model.GranPremio
+	err = scanGranPremio(
+		tx.QueryRow(ctx,
+			`INSERT INTO gran_premios
+				(temporada_id, nombre, circuito, pais, fecha, tiene_sprint, estado, orden)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			 RETURNING `+granPremioCols,
+			gp.TemporadaID, gp.Nombre, gp.Circuito, gp.Pais, gp.Fecha,
+			gp.TieneSprint, gp.Estado, gp.Orden,
+		),
+		&created,
+	)
+	if err != nil {
+		if isForeignKeyViolation(err) {
+			return nil, ErrForeignKey
+		}
+		return nil, fmt.Errorf("gran_premios CreateConSesiones insert gp: %w", err)
+	}
+
+	for _, tipo := range tiposSesion {
+		if _, err = tx.Exec(ctx,
+			`INSERT INTO sesiones (gran_premio_id, tipo, estado) VALUES ($1, $2, $3)`,
+			created.ID, tipo, "pendiente",
+		); err != nil {
+			return nil, fmt.Errorf("gran_premios CreateConSesiones insert sesion %s: %w", tipo, err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("gran_premios CreateConSesiones commit: %w", err)
+	}
+	return &created, nil
+}
+
 // UpdateEstado cambia el estado de un GP y devuelve el registro actualizado.
 // Devuelve ErrNotFound si el GP no existe.
 func (s *GranPremioStore) UpdateEstado(ctx context.Context, id int, estado model.EstadoGP) (*model.GranPremio, error) {
