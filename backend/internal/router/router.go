@@ -19,11 +19,13 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	equipoStore := store.NewEquipoStore(pool)
 	pilotoStore := store.NewPilotoStore(pool)
 	temporadaStore := store.NewTemporadaStore(pool)
+	granPremioStore := store.NewGranPremioStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
 	pilotoSvc := service.NewPilotoService(pilotoStore)
 	temporadaSvc := service.NewTemporadaService(temporadaStore)
+	granPremioSvc := service.NewGranPremioService(granPremioStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
@@ -32,6 +34,8 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	adminPiloto := adminhandler.NewPilotoHandler(pilotoSvc)
 	publicTemporada := publichandler.NewTemporadaHandler(temporadaSvc)
 	adminTemporada := adminhandler.NewTemporadaHandler(temporadaSvc)
+	publicGP := publichandler.NewGranPremioHandler(granPremioSvc)
+	adminGP := adminhandler.NewGranPremioHandler(granPremioSvc)
 
 	r := chi.NewRouter()
 
@@ -52,6 +56,8 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/pilotos", publicPiloto.GetAll)
 			r.Get("/temporada-activa", publicTemporada.GetActiva)
 			r.Get("/temporadas", publicTemporada.GetAll)
+			r.Get("/temporadas/{id}/calendario", publicGP.GetCalendario)
+			r.Get("/gp/{id}", publicGP.GetByID)
 		})
 
 		// Rutas de administración — requieren JWT.
@@ -70,6 +76,12 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Post("/temporadas", adminTemporada.Create)
 			r.Put("/temporadas/{id}", adminTemporada.Update)
 			r.Patch("/temporadas/{id}/activar", adminTemporada.Activar)
+			r.Get("/temporadas/{id}/gp", adminGP.GetAll)
+			r.Post("/temporadas/{id}/gp", adminGP.Create)
+
+			r.Get("/gp/{id}", adminGP.GetByID)
+			r.Put("/gp/{id}", adminGP.Update)
+			r.Patch("/gp/{id}/estado", adminGP.UpdateEstado)
 		})
 	})
 
