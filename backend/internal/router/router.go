@@ -17,13 +17,17 @@ import (
 func New(pool *pgxpool.Pool) *chi.Mux {
 	// Capa store: acceso a base de datos.
 	equipoStore := store.NewEquipoStore(pool)
+	pilotoStore := store.NewPilotoStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
+	pilotoSvc := service.NewPilotoService(pilotoStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
 	adminEquipo := adminhandler.NewEquipoHandler(equipoSvc)
+	publicPiloto := publichandler.NewPilotoHandler(pilotoSvc)
+	adminPiloto := adminhandler.NewPilotoHandler(pilotoSvc)
 
 	r := chi.NewRouter()
 
@@ -41,6 +45,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 		// Rutas públicas — sin autenticación.
 		r.Route("/public", func(r chi.Router) {
 			r.Get("/equipos", publicEquipo.GetAll)
+			r.Get("/pilotos", publicPiloto.GetAll)
 		})
 
 		// Rutas de administración — requieren JWT.
@@ -50,6 +55,10 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/equipos", adminEquipo.GetAll)
 			r.Post("/equipos", adminEquipo.Create)
 			r.Put("/equipos/{id}", adminEquipo.Update)
+
+			r.Get("/pilotos", adminPiloto.GetAll)
+			r.Post("/pilotos", adminPiloto.Create)
+			r.Put("/pilotos/{id}", adminPiloto.Update)
 		})
 	})
 
