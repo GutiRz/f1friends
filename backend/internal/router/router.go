@@ -20,12 +20,14 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	pilotoStore := store.NewPilotoStore(pool)
 	temporadaStore := store.NewTemporadaStore(pool)
 	granPremioStore := store.NewGranPremioStore(pool)
+	inscripcionStore := store.NewInscripcionStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
 	pilotoSvc := service.NewPilotoService(pilotoStore)
 	temporadaSvc := service.NewTemporadaService(temporadaStore)
 	granPremioSvc := service.NewGranPremioService(granPremioStore)
+	inscripcionSvc := service.NewInscripcionService(inscripcionStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
@@ -36,6 +38,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	adminTemporada := adminhandler.NewTemporadaHandler(temporadaSvc)
 	publicGP := publichandler.NewGranPremioHandler(granPremioSvc)
 	adminGP := adminhandler.NewGranPremioHandler(granPremioSvc)
+	adminInscripcion := adminhandler.NewInscripcionHandler(inscripcionSvc)
 
 	r := chi.NewRouter()
 
@@ -82,6 +85,10 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/gp/{id}", adminGP.GetByID)
 			r.Put("/gp/{id}", adminGP.Update)
 			r.Patch("/gp/{id}/estado", adminGP.UpdateEstado)
+			r.Get("/gp/{id}/inscripciones", adminInscripcion.GetAll)
+			r.Post("/gp/{id}/inscripciones", adminInscripcion.Create)
+
+			r.Put("/inscripciones/{id}", adminInscripcion.Update)
 		})
 	})
 
