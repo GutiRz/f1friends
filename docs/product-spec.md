@@ -4,6 +4,8 @@
 
 F1 Friends es una aplicación web para gestionar ligas privadas de Fórmula 1. Sustituye la gestión manual en Excel y grupos de WhatsApp, ofreciendo una interfaz visual y moderna para consultar y administrar temporadas, pilotos, equipos, resultados y normativa.
 
+> **Nota de dominio:** en esta liga, los "pilotos" no son pilotos reales de F1 sino **miembros de la comunidad** que compiten en el campeonato (en un videojuego como F1 25 de EA). La entidad Piloto representa a un jugador con su identidad pública dentro de la liga: dorsal, nombre de comunidad, plataformas de juego y canales opcionales. Esto es distinto de la entidad Usuario, que representa una cuenta de acceso al panel de administración.
+
 **Objetivos principales:**
 - Centralizar toda la información de la liga en un único lugar.
 - Ofrecer una parte pública accesible sin registro para consultar datos de la temporada.
@@ -88,8 +90,9 @@ Accesibles solo para el rol Administrador.
 - Cada escudería tiene habitualmente 2 pilotos titulares.
 - Los equipos son independientes de la temporada (pueden participar en varias).
 
-### 4.4 Gestión de Pilotos
-- Crear y editar pilotos: nombre, apellido, nacionalidad, número, etc.
+### 4.4 Gestión de Pilotos (Miembros de la Liga)
+- Crear y editar el perfil de cada miembro: nombre público, nombre real, dorsal, nacionalidad, plataformas de juego, avatar y enlaces opcionales a canales.
+- Marcar un piloto como activo o inactivo (baja de la liga).
 - Asignar pilotos titulares a un equipo por temporada.
 - Gestionar reservas: los reservas no pertenecen a una escudería fija.
 - Registrar cambios de equipo de un piloto durante la temporada.
@@ -110,7 +113,7 @@ Accesibles solo para el rol Administrador.
 - Tipos de sanción:
   - **Penalización de tiempo** (+5s, +10s, etc.) — reordena la clasificación final y recalcula los puntos asignados.
   - **Descalificación (DSQ)** — el piloto pierde todos los puntos de esa sesión y se elimina de la clasificación.
-  - **Penalización de posiciones en parrilla** — informativa. No afecta a los puntos ni a la clasificación de la sesión actual. Se registra como aviso para la gestión del siguiente GP, donde el administrador deberá aplicarla manualmente al introducir la parrilla.
+  - **Penalización de posiciones en parrilla** — informativa. No afecta a los puntos ni a la clasificación de la sesión actual. Se registra como aviso para la gestión del siguiente GP, donde el administrador deberá aplicarla manualmente al introducir la parrilla. No se modela automáticamente en el sistema en esta versión.
   - **Amonestación** — solo informativa, sin efecto en puntos ni posición.
 - Cada sanción incluye: motivo (texto libre), tipo, valor (si aplica) y referencia al incidente.
 - Las sanciones son visibles en el detalle público del GP.
@@ -132,8 +135,16 @@ Temporada
 Equipo (Escudería)
   - id, nombre, color, logo
 
-Piloto
-  - id, nombre, apellido, nacionalidad, número
+Piloto (Miembro de la liga)
+  - id
+  - nombre_publico (apodo o nombre con el que se le conoce en la liga)
+  - nombre_real (opcional)
+  - nacionalidad (opcional)
+  - numero (dorsal, opcional — puede cambiar entre temporadas)
+  - id_psn, id_ea, id_xbox (identificadores de plataforma, opcionales)
+  - twitch_url, youtube_url (opcionales)
+  - avatar_url (opcional)
+  - activo (bool — false si el miembro ha causado baja en la liga)
 
 AsignacionPiloto (Piloto en Temporada)
   - piloto_id, temporada_id, equipo_id, tipo (titular | reserva)
@@ -163,7 +174,7 @@ ResultadoSesion
   - sesion_id, inscripcion_id
   - posicion_original (posición al cruzar la línea de meta, antes de sanciones)
   - posicion (posición final tras aplicar sanciones — campo calculado)
-  - puntos (puntos asignados según posicion final — campo calculado)
+  - puntos (puntos asignados según posicion final — campo calculado - se almacena pero se recalcula automáticamente cuando cambian resultados o sanciones)
   - pole (bool) — solo aplica a sesión de tipo qualy
   - vuelta_rapida (bool) — solo aplica a sesiones de tipo sprint y carrera
   - NOTA: posicion y puntos no son fuente de verdad absoluta; se recalculan
@@ -234,7 +245,7 @@ El objetivo del MVP es tener una aplicación funcional que permita gestionar una
 
 ## 8. Funcionalidades Futuras (Post-MVP)
 
-- **Perfil de piloto público:** Página individual por piloto con su historial de resultados y estadísticas.
+- **Ficha pública de piloto:** Página individual por miembro con su historial de resultados, estadísticas y enlaces a sus canales (Twitch, YouTube) y plataformas de juego (PSN, EA, Xbox). La arquitectura de datos ya está preparada para ello (campos opcionales en la entidad Piloto).
 - **Perfil de equipo público:** Página individual por equipo con su historia en la liga.
 - **Notificaciones:** Avisos automáticos (email o push) sobre nuevos resultados o próximas carreras.
 - **Predicciones o quinielas:** Los participantes pueden apostar resultados antes de cada GP.
@@ -251,7 +262,7 @@ El objetivo del MVP es tener una aplicación funcional que permita gestionar una
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| 1 | ¿Habrá un rol "piloto registrado" con acceso a su perfil personal? | Define si se necesita sistema de registro y autenticación para participantes |
+| 1 | ¿Un miembro (Piloto) podrá tener cuenta propia para editar su perfil o consultar datos privados? | Implicaría vincular Piloto con Usuario y añadir un flujo de registro/autenticación para participantes. Por ahora solo los administradores tienen cuenta. |
 | 4 | ¿Puede haber penalizaciones de puntos? | Afecta al cálculo de clasificación |
 | 5 | ¿Los equipos pueden tener más de 2 titulares (p.ej. equipos satélite)? | Afecta a la regla de negocio nº 2 |
 | 7 | ¿Se necesita internacionalización (i18n) desde el inicio? | Afecta a la arquitectura del frontend |
