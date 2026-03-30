@@ -18,16 +18,20 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	// Capa store: acceso a base de datos.
 	equipoStore := store.NewEquipoStore(pool)
 	pilotoStore := store.NewPilotoStore(pool)
+	temporadaStore := store.NewTemporadaStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
 	equipoSvc := service.NewEquipoService(equipoStore)
 	pilotoSvc := service.NewPilotoService(pilotoStore)
+	temporadaSvc := service.NewTemporadaService(temporadaStore)
 
 	// Handlers: decodifican requests y escriben responses.
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
 	adminEquipo := adminhandler.NewEquipoHandler(equipoSvc)
 	publicPiloto := publichandler.NewPilotoHandler(pilotoSvc)
 	adminPiloto := adminhandler.NewPilotoHandler(pilotoSvc)
+	publicTemporada := publichandler.NewTemporadaHandler(temporadaSvc)
+	adminTemporada := adminhandler.NewTemporadaHandler(temporadaSvc)
 
 	r := chi.NewRouter()
 
@@ -46,6 +50,8 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 		r.Route("/public", func(r chi.Router) {
 			r.Get("/equipos", publicEquipo.GetAll)
 			r.Get("/pilotos", publicPiloto.GetAll)
+			r.Get("/temporada-activa", publicTemporada.GetActiva)
+			r.Get("/temporadas", publicTemporada.GetAll)
 		})
 
 		// Rutas de administración — requieren JWT.
@@ -59,6 +65,11 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/pilotos", adminPiloto.GetAll)
 			r.Post("/pilotos", adminPiloto.Create)
 			r.Put("/pilotos/{id}", adminPiloto.Update)
+
+			r.Get("/temporadas", adminTemporada.GetAll)
+			r.Post("/temporadas", adminTemporada.Create)
+			r.Put("/temporadas/{id}", adminTemporada.Update)
+			r.Patch("/temporadas/{id}/activar", adminTemporada.Activar)
 		})
 	})
 
