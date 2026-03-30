@@ -54,6 +54,22 @@ func (s *SesionStore) GetAllByGP(ctx context.Context, granPremioID int) ([]model
 	return sesiones, rows.Err()
 }
 
+// GetByID devuelve la sesión con el id dado o ErrNotFound si no existe.
+func (s *SesionStore) GetByID(ctx context.Context, id int) (*model.Sesion, error) {
+	var ses model.Sesion
+	err := scanSesion(
+		s.db.QueryRow(ctx, `SELECT `+sesionCols+` FROM sesiones WHERE id = $1`, id),
+		&ses,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("sesiones GetByID: %w", err)
+	}
+	return &ses, nil
+}
+
 // Create inserta una sesión nueva y devuelve el registro creado.
 // Devuelve ErrDuplicate si ya existe una sesión del mismo tipo para ese GP.
 // Devuelve ErrForeignKey si el gran_premio_id no existe.
