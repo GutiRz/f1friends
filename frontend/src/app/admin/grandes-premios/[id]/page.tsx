@@ -4,8 +4,8 @@ import { getAdminGranPremio, getAdminSesiones, getAdminInscripciones } from "@/l
 import { parseTemporadaId } from "@/lib/temporada";
 import type { GranPremio } from "@/types/gran-premio";
 import type { Sesion } from "@/types/sesion";
-import type { InscripcionGP } from "@/types/inscripcion";
 import { GranPremioEditForm } from "./edit-form";
+import { InscripcionesTable } from "./inscripciones-table";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -22,13 +22,6 @@ const TIPO_SESION_LABEL: Record<Sesion["tipo"], string> = {
 const ESTADO_SESION_LABEL: Record<Sesion["estado"], string> = {
   pendiente: "Pendiente",
   completada: "Completada",
-};
-
-const ESTADO_INSCRIPCION_LABEL: Record<InscripcionGP["estado"], string> = {
-  inscrito: "Inscrito",
-  ausente: "Ausente",
-  sustituido: "Sustituido",
-  participo: "Participó",
 };
 
 async function handleFetch<T>(fn: () => Promise<T>): Promise<T> {
@@ -95,29 +88,7 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
       )}
 
       <h2 style={{ marginTop: 32 }}>Inscripciones</h2>
-
-      {inscripciones.length === 0 ? (
-        <p>No hay inscripciones para este Gran Premio.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={th}>Piloto ID</th>
-              <th style={th}>Equipo ID</th>
-              <th style={th}>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inscripciones.map((i) => (
-              <tr key={i.id}>
-                <td style={td}>{i.piloto_id}</td>
-                <td style={td}>{i.equipo_id}</td>
-                <td style={td}>{ESTADO_INSCRIPCION_LABEL[i.estado]}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <InscripcionesTable inscripciones={inscripciones} />
     </main>
   );
 }
