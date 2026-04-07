@@ -34,7 +34,12 @@ export default async function AdminGrandesPremiosPage({ searchParams }: Props) {
         <Link href="/admin">← Panel admin</Link>
       </nav>
 
-      <h1>Grandes Premios — Temporada {temporadaId}</h1>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 24, marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>Grandes Premios — Temporada {temporadaId}</h1>
+        <Link href={`/admin/grandes-premios/nuevo?temporada=${temporadaId}`}>
+          + Nuevo GP
+        </Link>
+      </div>
 
       {gps.length === 0 ? (
         <p>No hay grandes premios para esta temporada.</p>
