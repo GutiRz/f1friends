@@ -20,6 +20,9 @@ export default function AdminPage() {
           <Link href="/admin/temporadas">Temporadas</Link>
         </li>
         <li>
+          <Link href="/admin/pilotos">Pilotos</Link>
+        </li>
+        <li>
           <Link href="/admin/grandes-premios?temporada=1">
             Grandes Premios
           </Link>
