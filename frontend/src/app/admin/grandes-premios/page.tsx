@@ -55,7 +55,11 @@ export default async function AdminGrandesPremiosPage({ searchParams }: Props) {
             {gps.map((gp) => (
               <tr key={gp.id}>
                 <td style={td}>{gp.orden}</td>
-                <td style={td}>{gp.nombre}</td>
+                <td style={td}>
+                  <Link href={`/admin/grandes-premios/${gp.id}?temporada=${temporadaId}`}>
+                    {gp.nombre}
+                  </Link>
+                </td>
                 <td style={td}>{gp.circuito ?? "—"}</td>
                 <td style={td}>{gp.pais ?? "—"}</td>
                 <td style={td}>

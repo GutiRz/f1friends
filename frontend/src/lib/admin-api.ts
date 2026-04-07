@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import type { GranPremio } from "@/types/gran-premio";
+import type { Sesion } from "@/types/sesion";
 
 const COOKIE_NAME = "f1friends_token";
 
@@ -50,6 +51,38 @@ export async function getAdminGrandesPremios(
 
   if (!res.ok) {
     throw new Error(`Error al obtener los grandes premios: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getAdminGranPremio(id: number): Promise<GranPremio> {
+  const res = await adminFetch(`/api/v1/admin/gp/${id}`);
+
+  if (res.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (res.status === 404) {
+    throw new Error("NOT_FOUND");
+  }
+
+  if (!res.ok) {
+    throw new Error(`Error al obtener el gran premio: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getAdminSesiones(gpId: number): Promise<Sesion[]> {
+  const res = await adminFetch(`/api/v1/admin/gp/${gpId}/sesiones`);
+
+  if (res.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!res.ok) {
+    throw new Error(`Error al obtener las sesiones: ${res.status}`);
   }
 
   return res.json();
