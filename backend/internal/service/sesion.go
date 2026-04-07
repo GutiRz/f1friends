@@ -35,11 +35,21 @@ func (s *SesionService) GetSesionesConResultados(ctx context.Context, granPremio
 		return nil, err
 	}
 
+	sinPuntos := map[model.TipoSesion]bool{
+		model.TipoQualy:       true,
+		model.TipoSprintQualy: true,
+	}
+
 	resultado := make([]model.SesionConResultados, 0, len(sesiones))
 	for _, ses := range sesiones {
 		resultados, err := s.resultadoStore.GetPublicoBySesion(ctx, ses.ID)
 		if err != nil {
 			return nil, err
+		}
+		if sinPuntos[ses.Tipo] {
+			for i := range resultados {
+				resultados[i].Puntos = nil
+			}
 		}
 		resultado = append(resultado, model.SesionConResultados{
 			ID:         ses.ID,

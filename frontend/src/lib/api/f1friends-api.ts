@@ -1,5 +1,6 @@
 import type { ClasificacionPiloto, ClasificacionConstructor } from "@/types/clasificacion";
 import type { GranPremio } from "@/types/gran-premio";
+import type { SesionConResultados } from "@/types/sesion";
 
 function getBaseUrl(): string {
   const url = process.env.BACKEND_API_URL;
@@ -63,6 +64,20 @@ export async function getGranPremioById(id: number): Promise<GranPremio> {
   if (!res.ok) {
     throw new Error(
       `Error fetching gran premio: ${res.status} ${res.statusText}`
+    );
+  }
+
+  return res.json();
+}
+
+export async function getSesionesByGranPremioId(
+  id: number
+): Promise<SesionConResultados[]> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/public/gp/${id}/sesiones`);
+
+  if (!res.ok) {
+    throw new Error(
+      `Error fetching sesiones: ${res.status} ${res.statusText}`
     );
   }
 
