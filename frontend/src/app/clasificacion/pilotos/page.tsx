@@ -1,0 +1,47 @@
+import { getClasificacionPilotos } from "@/lib/api/f1friends-api";
+import type { ClasificacionPiloto } from "@/types/clasificacion";
+import TablaClasificacionPilotos from "@/components/clasificacion/tabla-clasificacion-pilotos";
+import { parseTemporadaId } from "@/lib/temporada";
+
+export const metadata = {
+  title: "Clasificación de pilotos — F1 Friends",
+};
+
+type Props = {
+  searchParams: Promise<{ temporada?: string }>;
+};
+
+export default async function ClasificacionPilotosPage({ searchParams }: Props) {
+  const { temporada } = await searchParams;
+  const temporadaId = parseTemporadaId(temporada);
+
+  let pilotos: ClasificacionPiloto[] = [];
+  let error: string | null = null;
+
+  try {
+    pilotos = await getClasificacionPilotos(temporadaId);
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Error desconocido";
+  }
+
+  return (
+    <main style={{ padding: "2rem" }}>
+      <h1>Clasificación de pilotos</h1>
+      <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
+        Temporada {temporadaId}
+      </p>
+
+      {error ? (
+        <p style={{ marginTop: "1.5rem", color: "#c00" }}>
+          No se pudo cargar la clasificación: {error}
+        </p>
+      ) : pilotos.length === 0 ? (
+        <p style={{ marginTop: "1.5rem", color: "#666" }}>
+          No hay resultados disponibles.
+        </p>
+      ) : (
+        <TablaClasificacionPilotos pilotos={pilotos} />
+      )}
+    </main>
+  );
+}
