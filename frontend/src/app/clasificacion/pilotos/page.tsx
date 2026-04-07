@@ -2,6 +2,7 @@ import { getClasificacionPilotos } from "@/lib/api/f1friends-api";
 import type { ClasificacionPiloto } from "@/types/clasificacion";
 import TablaClasificacionPilotos from "@/components/clasificacion/tabla-clasificacion-pilotos";
 import { parseTemporadaId } from "@/lib/temporada";
+import PublicNav from "@/components/navigation/public-nav";
 
 export const metadata = {
   title: "Clasificación de pilotos — F1 Friends",
@@ -25,23 +26,26 @@ export default async function ClasificacionPilotosPage({ searchParams }: Props) 
   }
 
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>Clasificación de pilotos</h1>
-      <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
-        Temporada {temporadaId}
-      </p>
+    <>
+      <PublicNav temporadaId={temporadaId} />
+      <main style={{ padding: "2rem" }}>
+          <h1>Clasificación de pilotos</h1>
+        <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
+          Temporada {temporadaId}
+        </p>
 
-      {error ? (
-        <p style={{ marginTop: "1.5rem", color: "#c00" }}>
-          No se pudo cargar la clasificación: {error}
-        </p>
-      ) : pilotos.length === 0 ? (
-        <p style={{ marginTop: "1.5rem", color: "#666" }}>
-          No hay resultados disponibles.
-        </p>
-      ) : (
-        <TablaClasificacionPilotos pilotos={pilotos} />
-      )}
-    </main>
+        {error ? (
+          <p style={{ marginTop: "1.5rem", color: "#c00" }}>
+            No se pudo cargar la clasificación: {error}
+          </p>
+        ) : pilotos.length === 0 ? (
+          <p style={{ marginTop: "1.5rem", color: "#666" }}>
+            No hay resultados disponibles.
+          </p>
+        ) : (
+          <TablaClasificacionPilotos pilotos={pilotos} />
+        )}
+      </main>
+    </>
   );
 }
