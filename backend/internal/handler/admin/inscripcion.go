@@ -24,8 +24,8 @@ func NewInscripcionHandler(svc *service.InscripcionService) *InscripcionHandler 
 }
 
 type inscripcionRequest struct {
-	PilotoID int                    `json:"piloto_id"`
-	EquipoID int                    `json:"equipo_id"`
+	PilotoID int                     `json:"piloto_id"`
+	EquipoID *int                    `json:"equipo_id"`
 	Estado   model.EstadoInscripcion `json:"estado"`
 }
 

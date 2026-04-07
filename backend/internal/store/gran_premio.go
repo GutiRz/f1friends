@@ -162,6 +162,66 @@ func (s *GranPremioStore) CreateConSesiones(ctx context.Context, gp model.GranPr
 	return &created, nil
 }
 
+// CreateConSesionesEInscripciones inserta un GP, sus sesiones base y las inscripciones
+// iniciales en una única transacción.
+// inscripciones debe tener GranPremioID = 0; este método asigna el ID real del GP creado.
+// Devuelve ErrForeignKey si el temporada_id no existe.
+func (s *GranPremioStore) CreateConSesionesEInscripciones(
+	ctx context.Context,
+	gp model.GranPremio,
+	tiposSesion []model.TipoSesion,
+	inscripciones []model.InscripcionGP,
+) (*model.GranPremio, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("gran_premios CreateConSesionesEInscripciones begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var created model.GranPremio
+	err = scanGranPremio(
+		tx.QueryRow(ctx,
+			`INSERT INTO gran_premios
+				(temporada_id, nombre, circuito, pais, fecha, tiene_sprint, estado, orden)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			 RETURNING `+granPremioCols,
+			gp.TemporadaID, gp.Nombre, gp.Circuito, gp.Pais, gp.Fecha,
+			gp.TieneSprint, gp.Estado, gp.Orden,
+		),
+		&created,
+	)
+	if err != nil {
+		if isForeignKeyViolation(err) {
+			return nil, ErrForeignKey
+		}
+		return nil, fmt.Errorf("gran_premios CreateConSesionesEInscripciones insert gp: %w", err)
+	}
+
+	for _, tipo := range tiposSesion {
+		if _, err = tx.Exec(ctx,
+			`INSERT INTO sesiones (gran_premio_id, tipo, estado) VALUES ($1, $2, 'pendiente')`,
+			created.ID, tipo,
+		); err != nil {
+			return nil, fmt.Errorf("gran_premios CreateConSesionesEInscripciones insert sesion %s: %w", tipo, err)
+		}
+	}
+
+	for _, ins := range inscripciones {
+		if _, err = tx.Exec(ctx,
+			`INSERT INTO inscripciones_gp (gran_premio_id, piloto_id, equipo_id, estado)
+			 VALUES ($1, $2, $3, $4)`,
+			created.ID, ins.PilotoID, ins.EquipoID, ins.Estado,
+		); err != nil {
+			return nil, fmt.Errorf("gran_premios CreateConSesionesEInscripciones insert inscripcion piloto %d: %w", ins.PilotoID, err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("gran_premios CreateConSesionesEInscripciones commit: %w", err)
+	}
+	return &created, nil
+}
+
 // UpdateSincronizandoSesiones actualiza el GP y, si tiene_sprint cambia,
 // sincroniza las sesiones de sprint dentro de la misma transacción.
 //

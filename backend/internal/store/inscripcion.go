@@ -67,8 +67,9 @@ func (s *InscripcionStore) GetByID(ctx context.Context, id int) (*model.Inscripc
 }
 
 // Create inserta una inscripción nueva y devuelve el registro creado.
+// EquipoID puede ser nil (reservas sin equipo asignado).
 // Devuelve ErrDuplicate si el piloto ya está inscrito en ese GP.
-// Devuelve ErrForeignKey si el gran_premio_id, piloto_id o equipo_id no existen.
+// Devuelve ErrForeignKey si gran_premio_id, piloto_id o equipo_id no existen.
 func (s *InscripcionStore) Create(ctx context.Context, i model.InscripcionGP) (*model.InscripcionGP, error) {
 	var created model.InscripcionGP
 	err := scanInscripcion(
@@ -93,9 +94,10 @@ func (s *InscripcionStore) Create(ctx context.Context, i model.InscripcionGP) (*
 }
 
 // Update modifica piloto_id, equipo_id y estado de una inscripción existente.
+// EquipoID puede ser nil (reservas sin equipo asignado).
 // Devuelve ErrNotFound si la inscripción no existe.
 // Devuelve ErrDuplicate si el nuevo piloto_id ya tiene inscripción en ese GP.
-// Devuelve ErrForeignKey si el piloto_id o equipo_id no existen.
+// Devuelve ErrForeignKey si piloto_id o equipo_id no existen.
 func (s *InscripcionStore) Update(ctx context.Context, id int, i model.InscripcionGP) (*model.InscripcionGP, error) {
 	var updated model.InscripcionGP
 	err := scanInscripcion(

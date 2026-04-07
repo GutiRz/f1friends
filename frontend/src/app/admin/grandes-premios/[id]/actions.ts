@@ -58,7 +58,7 @@ export async function saveGranPremio(
 export async function saveEstadoInscripcion(
   id: number,
   pilotoId: number,
-  equipoId: number,
+  equipoId: number | null,
   estado: EstadoInscripcion
 ): Promise<SaveResult> {
   try {
@@ -82,3 +82,4 @@ export async function saveEstadoInscripcion(
     return { ok: false, error: "Error de conexión con el servidor" };
   }
 }
+

@@ -1,8 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getAdminGranPremio, getAdminSesiones, getAdminInscripciones } from "@/lib/admin-api";
+import { getPilotos, getEquipos } from "@/lib/api/f1friends-api";
 import { parseTemporadaId } from "@/lib/temporada";
-import type { GranPremio } from "@/types/gran-premio";
 import type { Sesion } from "@/types/sesion";
 import { GranPremioEditForm } from "./edit-form";
 import { InscripcionesTable } from "./inscripciones-table";
@@ -46,10 +46,12 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
     notFound();
   }
 
-  const [gp, sesiones, inscripciones] = await Promise.all([
+  const [gp, sesiones, inscripciones, pilotos, equipos] = await Promise.all([
     handleFetch(() => getAdminGranPremio(gpId)),
     handleFetch(() => getAdminSesiones(gpId)),
     handleFetch(() => getAdminInscripciones(gpId)),
+    getPilotos(),
+    getEquipos(),
   ]);
 
   return (
@@ -88,7 +90,7 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
       )}
 
       <h2 style={{ marginTop: 32 }}>Inscripciones</h2>
-      <InscripcionesTable inscripciones={inscripciones} />
+      <InscripcionesTable inscripciones={inscripciones} pilotos={pilotos} equipos={equipos} />
     </main>
   );
 }

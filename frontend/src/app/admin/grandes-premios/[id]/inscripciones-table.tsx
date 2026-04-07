@@ -4,18 +4,35 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveEstadoInscripcion } from "./actions";
 import type { InscripcionGP, EstadoInscripcion } from "@/types/inscripcion";
+import type { Piloto } from "@/types/piloto";
+import type { Equipo } from "@/types/equipo";
 
-const ESTADOS: EstadoInscripcion[] = ["inscrito", "ausente", "sustituido", "participo"];
+const ESTADOS: EstadoInscripcion[] = ["pendiente", "inscrito", "ausente", "sustituido", "participo"];
 
 const ESTADO_LABEL: Record<EstadoInscripcion, string> = {
+  pendiente: "Pendiente",
   inscrito: "Inscrito",
   ausente: "Ausente",
   sustituido: "Sustituido",
   participo: "Participó",
 };
 
-export function InscripcionesTable({ inscripciones }: { inscripciones: InscripcionGP[] }) {
+interface Props {
+  inscripciones: InscripcionGP[];
+  pilotos: Piloto[];
+  equipos: Equipo[];
+}
+
+export function InscripcionesTable({ inscripciones, pilotos, equipos }: Props) {
   const router = useRouter();
+
+  const pilotoNombre = (id: number) =>
+    pilotos.find((p) => p.id === id)?.nombre_publico ?? `#${id}`;
+
+  const equipoNombre = (id: number | null) => {
+    if (id === null) return "Reserva";
+    return equipos.find((e) => e.id === id)?.nombre ?? `#${id}`;
+  };
 
   if (inscripciones.length === 0) {
     return <p>No hay inscripciones para este Gran Premio.</p>;
@@ -25,15 +42,21 @@ export function InscripcionesTable({ inscripciones }: { inscripciones: Inscripci
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr>
-          <th style={th}>Piloto ID</th>
-          <th style={th}>Equipo ID</th>
+          <th style={th}>Piloto</th>
+          <th style={th}>Equipo</th>
           <th style={th}>Estado</th>
           <th style={th}></th>
         </tr>
       </thead>
       <tbody>
         {inscripciones.map((i) => (
-          <InscripcionRow key={i.id} inscripcion={i} onSaved={() => router.refresh()} />
+          <InscripcionRow
+            key={i.id}
+            inscripcion={i}
+            pilotoNombre={pilotoNombre(i.piloto_id)}
+            equipoNombre={equipoNombre(i.equipo_id)}
+            onSaved={() => router.refresh()}
+          />
         ))}
       </tbody>
     </table>
@@ -42,9 +65,13 @@ export function InscripcionesTable({ inscripciones }: { inscripciones: Inscripci
 
 function InscripcionRow({
   inscripcion,
+  pilotoNombre,
+  equipoNombre,
   onSaved,
 }: {
   inscripcion: InscripcionGP;
+  pilotoNombre: string;
+  equipoNombre: string;
   onSaved: () => void;
 }) {
   const [estado, setEstado] = useState<EstadoInscripcion>(inscripcion.estado);
@@ -75,8 +102,8 @@ function InscripcionRow({
 
   return (
     <tr>
-      <td style={td}>{inscripcion.piloto_id}</td>
-      <td style={td}>{inscripcion.equipo_id}</td>
+      <td style={td}>{pilotoNombre}</td>
+      <td style={td}>{equipoNombre}</td>
       <td style={td}>
         <select
           value={estado}

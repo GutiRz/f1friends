@@ -1,6 +1,8 @@
 import type { ClasificacionPiloto, ClasificacionConstructor } from "@/types/clasificacion";
 import type { GranPremio } from "@/types/gran-premio";
 import type { SesionConResultados } from "@/types/sesion";
+import type { Piloto } from "@/types/piloto";
+import type { Equipo } from "@/types/equipo";
 
 function getBaseUrl(): string {
   const url = process.env.BACKEND_API_URL;
@@ -81,5 +83,21 @@ export async function getSesionesByGranPremioId(
     );
   }
 
+  return res.json();
+}
+
+export async function getPilotos(): Promise<Piloto[]> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/public/pilotos`);
+  if (!res.ok) {
+    throw new Error(`Error fetching pilotos: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getEquipos(): Promise<Equipo[]> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/public/equipos`);
+  if (!res.ok) {
+    throw new Error(`Error fetching equipos: ${res.status} ${res.statusText}`);
+  }
   return res.json();
 }

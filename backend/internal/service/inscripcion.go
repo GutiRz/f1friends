@@ -21,6 +21,7 @@ func (s *InscripcionService) GetAllByGP(ctx context.Context, granPremioID int) (
 }
 
 // Create valida y crea una inscripción. Si no se especifica estado, se usa "inscrito".
+// equipo_id es opcional: nil es válido para reservas.
 func (s *InscripcionService) Create(ctx context.Context, i model.InscripcionGP) (*model.InscripcionGP, error) {
 	if err := validateInscripcionCreate(i); err != nil {
 		return nil, err
@@ -32,6 +33,7 @@ func (s *InscripcionService) Create(ctx context.Context, i model.InscripcionGP) 
 }
 
 // Update valida y actualiza una inscripción existente.
+// equipo_id es opcional: nil es válido para reservas.
 func (s *InscripcionService) Update(ctx context.Context, id int, i model.InscripcionGP) (*model.InscripcionGP, error) {
 	if err := validateInscripcionUpdate(i); err != nil {
 		return nil, err
@@ -46,8 +48,9 @@ func validateInscripcionCreate(i model.InscripcionGP) error {
 	if i.PilotoID < 1 {
 		return &ErrValidation{Msg: "piloto_id es obligatorio"}
 	}
-	if i.EquipoID < 1 {
-		return &ErrValidation{Msg: "equipo_id es obligatorio"}
+	// equipo_id es opcional (nil para reservas)
+	if i.EquipoID != nil && *i.EquipoID < 1 {
+		return &ErrValidation{Msg: "equipo_id no válido"}
 	}
 	if i.Estado != "" {
 		return validateEstadoInscripcion(i.Estado)
@@ -59,17 +62,19 @@ func validateInscripcionUpdate(i model.InscripcionGP) error {
 	if i.PilotoID < 1 {
 		return &ErrValidation{Msg: "piloto_id es obligatorio"}
 	}
-	if i.EquipoID < 1 {
-		return &ErrValidation{Msg: "equipo_id es obligatorio"}
+	// equipo_id es opcional (nil para reservas)
+	if i.EquipoID != nil && *i.EquipoID < 1 {
+		return &ErrValidation{Msg: "equipo_id no válido"}
 	}
 	return validateEstadoInscripcion(i.Estado)
 }
 
 func validateEstadoInscripcion(estado model.EstadoInscripcion) error {
 	switch estado {
-	case model.EstadoInscrito, model.EstadoAusente, model.EstadoSustituido, model.EstadoParticipo:
+	case model.EstadoInscripcionPendiente, model.EstadoInscrito,
+		model.EstadoAusente, model.EstadoSustituido, model.EstadoParticipo:
 		return nil
 	default:
-		return &ErrValidation{Msg: "estado no válido: use inscrito, ausente, sustituido o participo"}
+		return &ErrValidation{Msg: "estado no válido: use pendiente, inscrito, ausente, sustituido o participo"}
 	}
 }
