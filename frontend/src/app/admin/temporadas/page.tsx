@@ -18,7 +18,10 @@ export default async function AdminTemporadasPage() {
       <nav style={{ marginBottom: 16 }}>
         <Link href="/admin">← Panel de administración</Link>
       </nav>
-      <h1>Temporadas</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>Temporadas</h1>
+        <Link href="/admin/temporadas/nueva">+ Nueva temporada</Link>
+      </div>
       {temporadas.length === 0 ? (
         <p>No hay temporadas registradas.</p>
       ) : (
