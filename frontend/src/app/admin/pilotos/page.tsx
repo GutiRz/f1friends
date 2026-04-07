@@ -18,7 +18,10 @@ export default async function AdminPilotosPage() {
       <nav style={{ marginBottom: 16 }}>
         <Link href="/admin">← Panel de administración</Link>
       </nav>
-      <h1>Pilotos</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+        <h1 style={{ margin: 0 }}>Pilotos</h1>
+        <Link href="/admin/pilotos/nuevo">+ Nuevo piloto</Link>
+      </div>
       {pilotos.length === 0 ? (
         <p>No hay pilotos registrados.</p>
       ) : (
