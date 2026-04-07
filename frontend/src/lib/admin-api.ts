@@ -112,6 +112,13 @@ export async function getAdminTemporada(id: number): Promise<Temporada> {
   return t;
 }
 
+export async function getAdminPiloto(id: number): Promise<Piloto> {
+  const all = await getAdminPilotos();
+  const p = all.find((p) => p.id === id);
+  if (!p) throw new Error("NOT_FOUND");
+  return p;
+}
+
 export async function getAdminPilotos(): Promise<Piloto[]> {
   const res = await adminFetch("/api/v1/admin/pilotos");
 

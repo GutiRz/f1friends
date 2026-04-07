@@ -34,6 +34,7 @@ export default async function AdminPilotosPage() {
               <th style={th}>Nº</th>
               <th style={th}>Nacionalidad</th>
               <th style={th}>Activo</th>
+              <th style={th}></th>
             </tr>
           </thead>
           <tbody>
@@ -45,6 +46,9 @@ export default async function AdminPilotosPage() {
                 <td style={td}>{p.numero ?? "—"}</td>
                 <td style={td}>{p.nacionalidad ?? "—"}</td>
                 <td style={td}>{p.activo ? "Sí" : "No"}</td>
+                <td style={td}>
+                  <Link href={`/admin/pilotos/${p.id}`}>Editar</Link>
+                </td>
               </tr>
             ))}
           </tbody>
