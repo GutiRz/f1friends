@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
@@ -14,7 +15,13 @@ export default function AdminPage() {
   return (
     <main style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
       <h1>Panel de administración</h1>
-      <p>Sesión activa. Esta página está protegida por JWT.</p>
+      <ul style={{ marginBottom: 24 }}>
+        <li>
+          <Link href="/admin/grandes-premios?temporada=1">
+            Grandes Premios
+          </Link>
+        </li>
+      </ul>
       <button onClick={handleLogout} style={{ padding: "8px 16px" }}>
         Cerrar sesión
       </button>
