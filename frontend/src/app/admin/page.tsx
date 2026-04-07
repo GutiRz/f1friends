@@ -17,6 +17,9 @@ export default function AdminPage() {
       <h1>Panel de administración</h1>
       <ul style={{ marginBottom: 24 }}>
         <li>
+          <Link href="/admin/temporadas">Temporadas</Link>
+        </li>
+        <li>
           <Link href="/admin/grandes-premios?temporada=1">
             Grandes Premios
           </Link>
