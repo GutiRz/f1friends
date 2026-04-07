@@ -56,3 +56,15 @@ export async function getGrandesPremios(
 
   return res.json();
 }
+
+export async function getGranPremioById(id: number): Promise<GranPremio> {
+  const res = await fetch(`${getBaseUrl()}/api/v1/public/gp/${id}`);
+
+  if (!res.ok) {
+    throw new Error(
+      `Error fetching gran premio: ${res.status} ${res.statusText}`
+    );
+  }
+
+  return res.json();
+}

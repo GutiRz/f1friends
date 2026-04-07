@@ -43,7 +43,7 @@ export default async function GrandesPremiosPage({ searchParams }: Props) {
             No hay grandes premios disponibles.
           </p>
         ) : (
-          <TablaGrandesPremios grandesPremios={grandesPremios} />
+          <TablaGrandesPremios grandesPremios={grandesPremios} temporadaId={temporadaId} />
         )}
       </main>
     </>

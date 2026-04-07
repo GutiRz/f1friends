@@ -1,7 +1,9 @@
+import Link from "next/link";
 import type { GranPremio } from "@/types/gran-premio";
 
 type Props = {
   grandesPremios: GranPremio[];
+  temporadaId: number;
 };
 
 const ESTADO_LABEL: Record<GranPremio["estado"], string> = {
@@ -10,7 +12,7 @@ const ESTADO_LABEL: Record<GranPremio["estado"], string> = {
   completado: "Completado",
 };
 
-export default function TablaGrandesPremios({ grandesPremios }: Props) {
+export default function TablaGrandesPremios({ grandesPremios, temporadaId }: Props) {
   return (
     <div style={{ marginTop: "1.5rem", overflowX: "auto" }}>
       <table>
@@ -29,7 +31,11 @@ export default function TablaGrandesPremios({ grandesPremios }: Props) {
           {grandesPremios.map((gp) => (
             <tr key={gp.id}>
               <td>{gp.orden}</td>
-              <td>{gp.nombre}</td>
+              <td>
+                <Link href={`/grandes-premios/${gp.id}?temporada=${temporadaId}`}>
+                  {gp.nombre}
+                </Link>
+              </td>
               <td>{gp.circuito ?? "—"}</td>
               <td>{gp.pais ?? "—"}</td>
               <td>
