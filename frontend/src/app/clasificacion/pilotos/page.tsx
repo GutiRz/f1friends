@@ -1,4 +1,4 @@
-import { getClasificacionPilotos } from "@/lib/api/f1friends-api";
+import { getClasificacionPilotos, getTemporadaActivaId } from "@/lib/api/f1friends-api";
 import type { ClasificacionPiloto } from "@/types/clasificacion";
 import TablaClasificacionPilotos from "@/components/clasificacion/tabla-clasificacion-pilotos";
 import { parseTemporadaId } from "@/lib/temporada";
@@ -14,7 +14,8 @@ type Props = {
 
 export default async function ClasificacionPilotosPage({ searchParams }: Props) {
   const { temporada } = await searchParams;
-  const temporadaId = parseTemporadaId(temporada);
+  const activaId = await getTemporadaActivaId();
+  const temporadaId = parseTemporadaId(temporada, activaId);
 
   let pilotos: ClasificacionPiloto[] = [];
   let error: string | null = null;

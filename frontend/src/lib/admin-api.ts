@@ -104,6 +104,13 @@ export async function getAdminInscripciones(gpId: number): Promise<InscripcionGP
   return res.json();
 }
 
+export async function getAdminTemporada(id: number): Promise<Temporada> {
+  const all = await getAdminTemporadas();
+  const t = all.find((t) => t.id === id);
+  if (!t) throw new Error("NOT_FOUND");
+  return t;
+}
+
 export async function getAdminTemporadas(): Promise<Temporada[]> {
   const res = await adminFetch("/api/v1/admin/temporadas");
 

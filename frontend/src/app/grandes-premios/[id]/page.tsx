@@ -1,4 +1,4 @@
-import { getGranPremioById, getSesionesByGranPremioId } from "@/lib/api/f1friends-api";
+import { getGranPremioById, getSesionesByGranPremioId, getTemporadaActivaId } from "@/lib/api/f1friends-api";
 import type { GranPremio } from "@/types/gran-premio";
 import type { SesionConResultados } from "@/types/sesion";
 import { parseTemporadaId } from "@/lib/temporada";
@@ -23,7 +23,8 @@ const ESTADO_LABEL: Record<GranPremio["estado"], string> = {
 export default async function GranPremioPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { temporada } = await searchParams;
-  const temporadaId = parseTemporadaId(temporada);
+  const activaId = await getTemporadaActivaId();
+  const temporadaId = parseTemporadaId(temporada, activaId);
   const gpId = Number(id);
 
   let gp: GranPremio | null = null;

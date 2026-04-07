@@ -1,4 +1,4 @@
-import { getGrandesPremios } from "@/lib/api/f1friends-api";
+import { getGrandesPremios, getTemporadaActivaId } from "@/lib/api/f1friends-api";
 import type { GranPremio } from "@/types/gran-premio";
 import { parseTemporadaId } from "@/lib/temporada";
 import PublicNav from "@/components/navigation/public-nav";
@@ -14,7 +14,8 @@ type Props = {
 
 export default async function GrandesPremiosPage({ searchParams }: Props) {
   const { temporada } = await searchParams;
-  const temporadaId = parseTemporadaId(temporada);
+  const activaId = await getTemporadaActivaId();
+  const temporadaId = parseTemporadaId(temporada, activaId);
 
   let grandesPremios: GranPremio[] = [];
   let error: string | null = null;

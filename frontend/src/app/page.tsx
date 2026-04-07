@@ -1,9 +1,11 @@
 import PublicNav from "@/components/navigation/public-nav";
+import { getTemporadaActivaId } from "@/lib/api/f1friends-api";
 
-export default function Home() {
+export default async function Home() {
+  const activaId = await getTemporadaActivaId();
   return (
     <>
-      <PublicNav temporadaId={1} />
+      <PublicNav temporadaId={activaId} />
       <main style={{ padding: "2rem" }}>
         <h1>F1 Friends</h1>
         <p style={{ marginTop: "0.5rem", color: "#666" }}>

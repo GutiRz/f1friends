@@ -1,4 +1,4 @@
-import { getClasificacionConstructores } from "@/lib/api/f1friends-api";
+import { getClasificacionConstructores, getTemporadaActivaId } from "@/lib/api/f1friends-api";
 import type { ClasificacionConstructor } from "@/types/clasificacion";
 import TablaClasificacionConstructores from "@/components/clasificacion/tabla-clasificacion-constructores";
 import { parseTemporadaId } from "@/lib/temporada";
@@ -14,7 +14,8 @@ type Props = {
 
 export default async function ClasificacionConstructoresPage({ searchParams }: Props) {
   const { temporada } = await searchParams;
-  const temporadaId = parseTemporadaId(temporada);
+  const activaId = await getTemporadaActivaId();
+  const temporadaId = parseTemporadaId(temporada, activaId);
 
   let constructores: ClasificacionConstructor[] = [];
   let error: string | null = null;

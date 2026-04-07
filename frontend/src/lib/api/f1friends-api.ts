@@ -12,6 +12,17 @@ function getBaseUrl(): string {
   return url;
 }
 
+export async function getTemporadaActivaId(): Promise<number> {
+  try {
+    const res = await fetch(`${getBaseUrl()}/api/v1/public/temporada-activa`);
+    if (!res.ok) return 1;
+    const t = await res.json();
+    return typeof t.id === "number" ? t.id : 1;
+  } catch {
+    return 1;
+  }
+}
+
 export async function getClasificacionPilotos(
   temporadaId: number
 ): Promise<ClasificacionPiloto[]> {

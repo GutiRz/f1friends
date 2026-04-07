@@ -33,6 +33,7 @@ export default async function AdminTemporadasPage() {
               <th style={th}>Año</th>
               <th style={th}>Activa</th>
               <th style={th}>Descripción</th>
+              <th style={th}></th>
             </tr>
           </thead>
           <tbody>
@@ -43,6 +44,9 @@ export default async function AdminTemporadasPage() {
                 <td style={td}>{t.anio}</td>
                 <td style={td}>{t.activa ? "Sí" : "No"}</td>
                 <td style={td}>{t.descripcion ?? "—"}</td>
+                <td style={td}>
+                  <Link href={`/admin/temporadas/${t.id}`}>Editar</Link>
+                </td>
               </tr>
             ))}
           </tbody>
