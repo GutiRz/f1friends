@@ -1,4 +1,5 @@
 import type { ClasificacionPiloto, ClasificacionConstructor } from "@/types/clasificacion";
+import type { GranPremio } from "@/types/gran-premio";
 
 function getBaseUrl(): string {
   const url = process.env.BACKEND_API_URL;
@@ -34,6 +35,22 @@ export async function getClasificacionConstructores(
   if (!res.ok) {
     throw new Error(
       `Error fetching clasificacion constructores: ${res.status} ${res.statusText}`
+    );
+  }
+
+  return res.json();
+}
+
+export async function getGrandesPremios(
+  temporadaId: number
+): Promise<GranPremio[]> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/v1/public/temporadas/${temporadaId}/calendario`
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `Error fetching grandes premios: ${res.status} ${res.statusText}`
     );
   }
 
