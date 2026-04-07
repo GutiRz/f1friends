@@ -37,7 +37,7 @@ func main() {
 	defer pool.Close()
 	log.Println("conexión a la base de datos establecida")
 
-	r := router.New(pool)
+	r := router.New(pool, cfg.JWTSecret)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),

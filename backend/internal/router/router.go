@@ -5,6 +5,7 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	authhandler "f1friends/backend/internal/handler/auth"
 	adminhandler "f1friends/backend/internal/handler/admin"
 	publichandler "f1friends/backend/internal/handler/public"
 	"f1friends/backend/internal/middleware"
@@ -14,8 +15,9 @@ import (
 
 // New construye y devuelve el router con todas las rutas registradas.
 // Las dependencias se cablan aquí: store → service → handler.
-func New(pool *pgxpool.Pool) *chi.Mux {
+func New(pool *pgxpool.Pool, jwtSecret string) *chi.Mux {
 	// Capa store: acceso a base de datos.
+	usuarioStore := store.NewUsuarioStore(pool)
 	equipoStore := store.NewEquipoStore(pool)
 	pilotoStore := store.NewPilotoStore(pool)
 	temporadaStore := store.NewTemporadaStore(pool)
@@ -26,6 +28,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	clasificacionStore := store.NewClasificacionStore(pool)
 
 	// Capa service: lógica de negocio y validaciones.
+	authSvc := service.NewAuthService(usuarioStore, jwtSecret)
 	equipoSvc := service.NewEquipoService(equipoStore)
 	pilotoSvc := service.NewPilotoService(pilotoStore)
 	temporadaSvc := service.NewTemporadaService(temporadaStore)
@@ -36,6 +39,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	clasificacionSvc := service.NewClasificacionService(clasificacionStore)
 
 	// Handlers: decodifican requests y escriben responses.
+	authH := authhandler.NewHandler(authSvc)
 	publicEquipo := publichandler.NewEquipoHandler(equipoSvc)
 	adminEquipo := adminhandler.NewEquipoHandler(equipoSvc)
 	publicPiloto := publichandler.NewPilotoHandler(pilotoSvc)
@@ -63,6 +67,9 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 		// Health — sin prefijo de grupo, accesible en /api/v1/health.
 		r.Get("/health", publichandler.Health)
 
+		// Auth — sin autenticación, accesible en /api/v1/auth/login.
+		r.Post("/auth/login", authH.Login)
+
 		// Rutas públicas — sin autenticación.
 		r.Route("/public", func(r chi.Router) {
 			r.Get("/equipos", publicEquipo.GetAll)
@@ -78,7 +85,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 
 		// Rutas de administración — requieren JWT.
 		r.Route("/admin", func(r chi.Router) {
-			r.Use(middleware.Auth)
+			r.Use(middleware.NewAuth(jwtSecret))
 
 			r.Get("/equipos", adminEquipo.GetAll)
 			r.Post("/equipos", adminEquipo.Create)
