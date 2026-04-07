@@ -9,16 +9,46 @@ import (
 
 // SesionService contiene la lógica de negocio del módulo de sesiones.
 type SesionService struct {
-	store   *store.SesionStore
-	gpStore *store.GranPremioStore
+	store          *store.SesionStore
+	gpStore        *store.GranPremioStore
+	resultadoStore *store.ResultadoSesionStore
 }
 
-func NewSesionService(s *store.SesionStore, gp *store.GranPremioStore) *SesionService {
-	return &SesionService{store: s, gpStore: gp}
+func NewSesionService(s *store.SesionStore, gp *store.GranPremioStore, resultado *store.ResultadoSesionStore) *SesionService {
+	return &SesionService{store: s, gpStore: gp, resultadoStore: resultado}
 }
 
 func (s *SesionService) GetAllByGP(ctx context.Context, granPremioID int) ([]model.Sesion, error) {
 	return s.store.GetAllByGP(ctx, granPremioID)
+}
+
+// GetSesionesConResultados devuelve las sesiones de un GP con sus resultados enriquecidos.
+// Devuelve ErrNotFound si el GP no existe.
+// Si el GP existe pero no tiene sesiones, devuelve un slice vacío.
+func (s *SesionService) GetSesionesConResultados(ctx context.Context, granPremioID int) ([]model.SesionConResultados, error) {
+	if _, err := s.gpStore.GetByID(ctx, granPremioID); err != nil {
+		return nil, err
+	}
+
+	sesiones, err := s.store.GetAllByGP(ctx, granPremioID)
+	if err != nil {
+		return nil, err
+	}
+
+	resultado := make([]model.SesionConResultados, 0, len(sesiones))
+	for _, ses := range sesiones {
+		resultados, err := s.resultadoStore.GetPublicoBySesion(ctx, ses.ID)
+		if err != nil {
+			return nil, err
+		}
+		resultado = append(resultado, model.SesionConResultados{
+			ID:         ses.ID,
+			Tipo:       ses.Tipo,
+			Estado:     ses.Estado,
+			Resultados: resultados,
+		})
+	}
+	return resultado, nil
 }
 
 // Create valida y crea una sesión. El estado inicial siempre es "pendiente".

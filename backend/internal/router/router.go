@@ -31,7 +31,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	temporadaSvc := service.NewTemporadaService(temporadaStore)
 	granPremioSvc := service.NewGranPremioService(granPremioStore)
 	inscripcionSvc := service.NewInscripcionService(inscripcionStore)
-	sesionSvc := service.NewSesionService(sesionStore, granPremioStore)
+	sesionSvc := service.NewSesionService(sesionStore, granPremioStore, resultadoStore)
 	resultadoSvc := service.NewResultadoSesionService(resultadoStore, sesionStore, inscripcionStore)
 	clasificacionSvc := service.NewClasificacionService(clasificacionStore)
 
@@ -43,6 +43,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 	publicTemporada := publichandler.NewTemporadaHandler(temporadaSvc)
 	adminTemporada := adminhandler.NewTemporadaHandler(temporadaSvc)
 	publicGP := publichandler.NewGranPremioHandler(granPremioSvc)
+	publicSesion := publichandler.NewSesionHandler(sesionSvc)
 	adminGP := adminhandler.NewGranPremioHandler(granPremioSvc)
 	adminInscripcion := adminhandler.NewInscripcionHandler(inscripcionSvc)
 	adminSesion := adminhandler.NewSesionHandler(sesionSvc)
@@ -72,6 +73,7 @@ func New(pool *pgxpool.Pool) *chi.Mux {
 			r.Get("/temporadas/{id}/clasificacion/pilotos", publicClasificacion.GetPilotos)
 			r.Get("/temporadas/{id}/clasificacion/constructores", publicClasificacion.GetConstructores)
 			r.Get("/gp/{id}", publicGP.GetByID)
+			r.Get("/gp/{id}/sesiones", publicSesion.GetSesiones)
 		})
 
 		// Rutas de administración — requieren JWT.

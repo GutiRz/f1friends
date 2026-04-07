@@ -52,6 +52,52 @@ func (s *ResultadoSesionStore) GetAllBySesion(ctx context.Context, sesionID int)
 	return resultados, rows.Err()
 }
 
+// GetPublicoBySesion devuelve los resultados de una sesión enriquecidos con datos
+// de piloto y equipo, ordenados por posicion_original.
+func (s *ResultadoSesionStore) GetPublicoBySesion(ctx context.Context, sesionID int) ([]model.ResultadoPublico, error) {
+	rows, err := s.db.Query(ctx,
+		`SELECT
+			rs.id,
+			rs.posicion,
+			rs.puntos,
+			rs.vuelta_rapida,
+			i.piloto_id,
+			p.nombre_publico,
+			i.equipo_id,
+			e.nombre
+		FROM resultados_sesion rs
+		JOIN inscripciones_gp i ON rs.inscripcion_id = i.id
+		JOIN pilotos p ON i.piloto_id = p.id
+		JOIN equipos e ON i.equipo_id = e.id
+		WHERE rs.sesion_id = $1
+		ORDER BY rs.posicion_original`,
+		sesionID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("resultados GetPublicoBySesion: %w", err)
+	}
+	defer rows.Close()
+
+	resultados := make([]model.ResultadoPublico, 0)
+	for rows.Next() {
+		var r model.ResultadoPublico
+		if err := rows.Scan(
+			&r.ID,
+			&r.Posicion,
+			&r.Puntos,
+			&r.VueltaRapida,
+			&r.Inscripcion.PilotoID,
+			&r.Inscripcion.NombrePiloto,
+			&r.Inscripcion.EquipoID,
+			&r.Inscripcion.NombreEquipo,
+		); err != nil {
+			return nil, fmt.Errorf("resultados GetPublicoBySesion scan: %w", err)
+		}
+		resultados = append(resultados, r)
+	}
+	return resultados, rows.Err()
+}
+
 // GetByID devuelve el resultado con el id dado o ErrNotFound si no existe.
 func (s *ResultadoSesionStore) GetByID(ctx context.Context, id int) (*model.ResultadoSesion, error) {
 	var r model.ResultadoSesion
