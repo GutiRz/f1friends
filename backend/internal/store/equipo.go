@@ -6,17 +6,9 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"f1friends/backend/internal/model"
-)
-
-// Errores de store usados por los handlers para mapear respuestas HTTP.
-var (
-	ErrNotFound    = errors.New("recurso no encontrado")
-	ErrDuplicate   = errors.New("valor duplicado")
-	ErrForeignKey  = errors.New("referencia a recurso inexistente")
 )
 
 // EquipoStore gestiona el acceso a la tabla equipos.
@@ -103,16 +95,4 @@ func (s *EquipoStore) Update(ctx context.Context, id int, e model.Equipo) (*mode
 		return nil, fmt.Errorf("equipos Update: %w", err)
 	}
 	return &updated, nil
-}
-
-// isUniqueViolation detecta la violación de restricción UNIQUE de PostgreSQL (código 23505).
-func isUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505"
-}
-
-// isForeignKeyViolation detecta la violación de clave foránea de PostgreSQL (código 23503).
-func isForeignKeyViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23503"
 }

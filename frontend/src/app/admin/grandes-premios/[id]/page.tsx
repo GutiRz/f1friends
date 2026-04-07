@@ -1,20 +1,16 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getAdminGranPremio, getAdminSesiones } from "@/lib/admin-api";
+import { getAdminGranPremio, getAdminSesiones, getAdminInscripciones } from "@/lib/admin-api";
 import { parseTemporadaId } from "@/lib/temporada";
 import type { GranPremio } from "@/types/gran-premio";
 import type { Sesion } from "@/types/sesion";
+import type { InscripcionGP } from "@/types/inscripcion";
+import { GranPremioEditForm } from "./edit-form";
 
 interface Props {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ temporada?: string }>;
 }
-
-const ESTADO_GP_LABEL: Record<GranPremio["estado"], string> = {
-  pendiente: "Pendiente",
-  en_curso: "En curso",
-  completado: "Completado",
-};
 
 const TIPO_SESION_LABEL: Record<Sesion["tipo"], string> = {
   qualy: "Clasificación",
@@ -26,6 +22,13 @@ const TIPO_SESION_LABEL: Record<Sesion["tipo"], string> = {
 const ESTADO_SESION_LABEL: Record<Sesion["estado"], string> = {
   pendiente: "Pendiente",
   completada: "Completada",
+};
+
+const ESTADO_INSCRIPCION_LABEL: Record<InscripcionGP["estado"], string> = {
+  inscrito: "Inscrito",
+  ausente: "Ausente",
+  sustituido: "Sustituido",
+  participo: "Participó",
 };
 
 async function handleFetch<T>(fn: () => Promise<T>): Promise<T> {
@@ -50,9 +53,10 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
     notFound();
   }
 
-  const [gp, sesiones] = await Promise.all([
+  const [gp, sesiones, inscripciones] = await Promise.all([
     handleFetch(() => getAdminGranPremio(gpId)),
     handleFetch(() => getAdminSesiones(gpId)),
+    handleFetch(() => getAdminInscripciones(gpId)),
   ]);
 
   return (
@@ -65,23 +69,7 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
 
       <h1>{gp.nombre}</h1>
 
-      <table style={{ marginBottom: 32, borderCollapse: "collapse" }}>
-        <tbody>
-          <Row label="Circuito" value={gp.circuito ?? "—"} />
-          <Row label="País" value={gp.pais ?? "—"} />
-          <Row
-            label="Fecha"
-            value={
-              gp.fecha
-                ? new Date(gp.fecha).toLocaleDateString("es-ES")
-                : "—"
-            }
-          />
-          <Row label="Estado" value={ESTADO_GP_LABEL[gp.estado]} />
-          <Row label="Sprint" value={gp.tiene_sprint ? "Sí" : "No"} />
-          <Row label="Orden" value={String(gp.orden)} />
-        </tbody>
-      </table>
+      <GranPremioEditForm gp={gp} />
 
       <h2>Sesiones</h2>
 
@@ -105,16 +93,32 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
           </tbody>
         </table>
       )}
-    </main>
-  );
-}
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <tr>
-      <td style={{ ...td, fontWeight: "bold", paddingRight: 24 }}>{label}</td>
-      <td style={td}>{value}</td>
-    </tr>
+      <h2 style={{ marginTop: 32 }}>Inscripciones</h2>
+
+      {inscripciones.length === 0 ? (
+        <p>No hay inscripciones para este Gran Premio.</p>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={th}>Piloto ID</th>
+              <th style={th}>Equipo ID</th>
+              <th style={th}>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inscripciones.map((i) => (
+              <tr key={i.id}>
+                <td style={td}>{i.piloto_id}</td>
+                <td style={td}>{i.equipo_id}</td>
+                <td style={td}>{ESTADO_INSCRIPCION_LABEL[i.estado]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </main>
   );
 }
 

@@ -162,6 +162,97 @@ func (s *GranPremioStore) CreateConSesiones(ctx context.Context, gp model.GranPr
 	return &created, nil
 }
 
+// UpdateSincronizandoSesiones actualiza el GP y, si tiene_sprint cambia,
+// sincroniza las sesiones de sprint dentro de la misma transacción.
+//
+//   - false → true: inserta sprint_qualy y sprint si no existen (ON CONFLICT DO NOTHING).
+//   - true  → false: rechaza con ErrConflict si alguna de esas sesiones tiene resultados;
+//     si están vacías, las elimina.
+//
+// Devuelve ErrNotFound si el GP no existe.
+// Devuelve ErrConflict si no se pueden eliminar las sesiones de sprint por tener resultados.
+func (s *GranPremioStore) UpdateSincronizandoSesiones(ctx context.Context, id int, gp model.GranPremio) (*model.GranPremio, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	// Leer tiene_sprint actual con bloqueo de fila para evitar condiciones de carrera.
+	var anteriorTieneSprint bool
+	err = tx.QueryRow(ctx,
+		`SELECT tiene_sprint FROM gran_premios WHERE id = $1 FOR UPDATE`,
+		id,
+	).Scan(&anteriorTieneSprint)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones select: %w", err)
+	}
+
+	// Actualizar el GP.
+	var updated model.GranPremio
+	err = scanGranPremio(
+		tx.QueryRow(ctx,
+			`UPDATE gran_premios SET
+				nombre = $1, circuito = $2, pais = $3, fecha = $4,
+				tiene_sprint = $5, orden = $6
+			 WHERE id = $7
+			 RETURNING `+granPremioCols,
+			gp.Nombre, gp.Circuito, gp.Pais, gp.Fecha,
+			gp.TieneSprint, gp.Orden, id,
+		),
+		&updated,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones update: %w", err)
+	}
+
+	// Sincronizar sesiones solo si tiene_sprint cambió.
+	if anteriorTieneSprint != gp.TieneSprint {
+		if anteriorTieneSprint && !gp.TieneSprint {
+			// Quitando sprint: verificar que no haya resultados antes de borrar.
+			var count int
+			err = tx.QueryRow(ctx,
+				`SELECT COUNT(*) FROM resultados_sesion rs
+				 JOIN sesiones s ON rs.sesion_id = s.id
+				 WHERE s.gran_premio_id = $1 AND s.tipo IN ('sprint_qualy', 'sprint')`,
+				id,
+			).Scan(&count)
+			if err != nil {
+				return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones count resultados: %w", err)
+			}
+			if count > 0 {
+				return nil, ErrConflict
+			}
+			if _, err = tx.Exec(ctx,
+				`DELETE FROM sesiones WHERE gran_premio_id = $1 AND tipo IN ('sprint_qualy', 'sprint')`,
+				id,
+			); err != nil {
+				return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones delete sesiones: %w", err)
+			}
+		} else {
+			// Añadiendo sprint: crear sesiones faltantes sin duplicar.
+			for _, tipo := range []model.TipoSesion{model.TipoSprintQualy, model.TipoSprint} {
+				if _, err = tx.Exec(ctx,
+					`INSERT INTO sesiones (gran_premio_id, tipo, estado)
+					 VALUES ($1, $2, 'pendiente')
+					 ON CONFLICT (gran_premio_id, tipo) DO NOTHING`,
+					id, tipo,
+				); err != nil {
+					return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones insert sesion %s: %w", tipo, err)
+				}
+			}
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("gran_premios UpdateSincronizandoSesiones commit: %w", err)
+	}
+	return &updated, nil
+}
+
 // UpdateEstado cambia el estado de un GP y devuelve el registro actualizado.
 // Devuelve ErrNotFound si el GP no existe.
 func (s *GranPremioStore) UpdateEstado(ctx context.Context, id int, estado model.EstadoGP) (*model.GranPremio, error) {

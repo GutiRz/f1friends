@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"f1friends/backend/internal/model"
@@ -50,13 +51,21 @@ func sesionesBase(tieneSprint bool) []model.TipoSesion {
 }
 
 // Update valida y actualiza los campos editables de un GP.
+// Si tiene_sprint cambia, sincroniza las sesiones de sprint atómicamente.
 // No modifica el estado ni el temporada_id; para eso usar UpdateEstado.
 func (s *GranPremioService) Update(ctx context.Context, id int, gp model.GranPremio) (*model.GranPremio, error) {
 	gp.Nombre = strings.TrimSpace(gp.Nombre)
 	if err := validateGranPremioUpdate(gp); err != nil {
 		return nil, err
 	}
-	return s.store.Update(ctx, id, gp)
+	updated, err := s.store.UpdateSincronizandoSesiones(ctx, id, gp)
+	if err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			return nil, &ErrValidation{Msg: "no se puede quitar el sprint: las sesiones de sprint o sprint qualy ya tienen resultados registrados"}
+		}
+		return nil, err
+	}
+	return updated, nil
 }
 
 // UpdateEstado valida el estado y lo aplica al GP.
