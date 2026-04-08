@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getAdminAsignaciones, getAdminPilotos, getAdminTemporada } from "@/lib/admin-api";
 import { getEquipos } from "@/lib/api/f1friends-api";
 import { NuevaAsignacionForm } from "./nueva-asignacion-form";
+import { AsignacionesTable } from "./asignaciones-table";
 import type { AsignacionVigente } from "@/types/asignacion";
 
 export default async function AdminTemporadaPilotosPage({
@@ -35,12 +36,8 @@ export default async function AdminTemporadaPilotosPage({
     getEquipos(),
   ]);
 
-  const pilotoMap = new Map(pilotos.map((p) => [p.id, p.nombre_publico]));
-  const equipoMap = new Map(equipos.map((e) => [e.id, e.nombre]));
+  const pilotoMap = Object.fromEntries(pilotos.map((p) => [p.id, p.nombre_publico]));
   const pilotosAsignados = new Set(asignaciones.map((a) => a.piloto_id));
-
-  const titulares = asignaciones.filter((a) => a.tipo === "titular");
-  const reservas = asignaciones.filter((a) => a.tipo === "reserva");
 
   return (
     <main style={{ maxWidth: 800, margin: "40px auto", padding: "0 16px" }}>
@@ -57,58 +54,13 @@ export default async function AdminTemporadaPilotosPage({
         pilotosAsignados={pilotosAsignados}
       />
 
-      <h2>Titulares ({titulares.length})</h2>
-      {titulares.length === 0 ? (
-        <p style={{ color: "#666" }}>No hay titulares asignados.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
-          <thead>
-            <tr>
-              <th style={th}>Piloto</th>
-              <th style={th}>Equipo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {titulares.map((a) => (
-              <tr key={a.id}>
-                <td style={td}>{pilotoMap.get(a.piloto_id) ?? `#${a.piloto_id}`}</td>
-                <td style={td}>{a.equipo_id ? (equipoMap.get(a.equipo_id) ?? `#${a.equipo_id}`) : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      <h2>Reservas ({reservas.length})</h2>
-      {reservas.length === 0 ? (
-        <p style={{ color: "#666" }}>No hay reservas asignadas.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={th}>Piloto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reservas.map((a) => (
-              <tr key={a.id}>
-                <td style={td}>{pilotoMap.get(a.piloto_id) ?? `#${a.piloto_id}`}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <h2>Parrilla ({asignaciones.length})</h2>
+      <AsignacionesTable
+        temporadaId={temporadaId}
+        asignaciones={asignaciones}
+        pilotoMap={pilotoMap}
+        equipos={equipos}
+      />
     </main>
   );
 }
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px 12px",
-  borderBottom: "2px solid #ccc",
-};
-
-const td: React.CSSProperties = {
-  padding: "8px 12px",
-  borderBottom: "1px solid #eee",
-};

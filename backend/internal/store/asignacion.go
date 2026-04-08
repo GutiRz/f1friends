@@ -71,6 +71,50 @@ func (s *AsignacionStore) GetPilotosDeTemporada(ctx context.Context, temporadaID
 	return result, rows.Err()
 }
 
+// Update cierra la asignación vigente del piloto en la temporada y abre una nueva
+// con los valores actualizados. Usa una transacción para garantizar atomicidad.
+// Devuelve ErrNotFound si no existe asignación vigente para ese piloto/temporada.
+func (s *AsignacionStore) Update(ctx context.Context, temporadaID, pilotoID int, a model.AsignacionVigente) (*model.AsignacionVigente, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("asignaciones Update begin: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Cierra la asignación vigente actual.
+	tag, err := tx.Exec(ctx,
+		`UPDATE asignaciones_piloto
+		 SET fecha_hasta = CURRENT_DATE
+		 WHERE piloto_id = $1 AND temporada_id = $2 AND fecha_hasta IS NULL`,
+		pilotoID, temporadaID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("asignaciones Update close: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, ErrNotFound
+	}
+
+	// Abre nueva asignación vigente.
+	err = tx.QueryRow(ctx,
+		`INSERT INTO asignaciones_piloto (piloto_id, temporada_id, equipo_id, tipo, fecha_desde)
+		 VALUES ($1, $2, $3, $4, CURRENT_DATE)
+		 RETURNING id, piloto_id, temporada_id, equipo_id, tipo`,
+		pilotoID, temporadaID, a.EquipoID, a.Tipo,
+	).Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo)
+	if err != nil {
+		if isForeignKeyViolation(err) {
+			return nil, ErrForeignKey
+		}
+		return nil, fmt.Errorf("asignaciones Update insert: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("asignaciones Update commit: %w", err)
+	}
+	return &a, nil
+}
+
 // Create inserta una nueva asignación vigente (fecha_hasta = NULL, fecha_desde = hoy).
 // Devuelve ErrDuplicate si el piloto ya tiene una asignación vigente en esa temporada.
 func (s *AsignacionStore) Create(ctx context.Context, a model.AsignacionVigente) (*model.AsignacionVigente, error) {

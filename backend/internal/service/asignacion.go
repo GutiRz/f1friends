@@ -24,6 +24,23 @@ func (s *AsignacionService) GetPilotosDeTemporada(ctx context.Context, temporada
 	return s.store.GetPilotosDeTemporada(ctx, temporadaID)
 }
 
+// Update cierra la asignación vigente y crea una nueva con los valores actualizados.
+func (s *AsignacionService) Update(ctx context.Context, temporadaID, pilotoID int, a model.AsignacionVigente) (*model.AsignacionVigente, error) {
+	switch a.Tipo {
+	case "titular":
+		if a.EquipoID == nil {
+			return nil, &ErrValidation{Msg: "un titular debe tener equipo asignado"}
+		}
+	case "reserva":
+		if a.EquipoID != nil {
+			return nil, &ErrValidation{Msg: "una reserva no debe tener equipo asignado"}
+		}
+	default:
+		return nil, &ErrValidation{Msg: "tipo debe ser 'titular' o 'reserva'"}
+	}
+	return s.store.Update(ctx, temporadaID, pilotoID, a)
+}
+
 // Create valida y crea una asignación vigente.
 // Reglas: titular requiere equipo_id; reserva no debe tener equipo_id.
 func (s *AsignacionService) Create(ctx context.Context, a model.AsignacionVigente) (*model.AsignacionVigente, error) {

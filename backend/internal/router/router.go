@@ -108,6 +108,7 @@ func New(pool *pgxpool.Pool, jwtSecret string) *chi.Mux {
 			r.Post("/temporadas/{id}/gp", adminGP.Create)
 			r.Get("/temporadas/{id}/pilotos", adminAsignacion.GetVigentes)
 			r.Post("/temporadas/{id}/pilotos", adminAsignacion.Create)
+			r.Put("/temporadas/{id}/pilotos/{pilotoId}", adminAsignacion.Update)
 
 			r.Get("/gp/{id}", adminGP.GetByID)
 			r.Put("/gp/{id}", adminGP.Update)

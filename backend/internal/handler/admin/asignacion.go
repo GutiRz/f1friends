@@ -46,6 +46,51 @@ func (h *AsignacionHandler) GetVigentes(w http.ResponseWriter, r *http.Request) 
 	render.JSON(w, http.StatusOK, asignaciones)
 }
 
+// Update modifica la asignación vigente de un piloto en la temporada
+// (cierra la actual y crea una nueva con los valores actualizados).
+// PUT /api/v1/admin/temporadas/{id}/pilotos/{pilotoId}
+func (h *AsignacionHandler) Update(w http.ResponseWriter, r *http.Request) {
+	temporadaID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil || temporadaID < 1 {
+		render.Error(w, http.StatusBadRequest, "id de temporada no válido")
+		return
+	}
+	pilotoID, err := strconv.Atoi(chi.URLParam(r, "pilotoId"))
+	if err != nil || pilotoID < 1 {
+		render.Error(w, http.StatusBadRequest, "id de piloto no válido")
+		return
+	}
+
+	var req asignacionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		render.Error(w, http.StatusBadRequest, "cuerpo de la petición no válido")
+		return
+	}
+
+	a := model.AsignacionVigente{
+		EquipoID: req.EquipoID,
+		Tipo:     req.Tipo,
+	}
+
+	updated, err := h.svc.Update(r.Context(), temporadaID, pilotoID, a)
+	if err != nil {
+		var valErr *service.ErrValidation
+		switch {
+		case errors.As(err, &valErr):
+			render.Error(w, http.StatusBadRequest, valErr.Msg)
+		case errors.Is(err, store.ErrNotFound):
+			render.Error(w, http.StatusNotFound, "asignación vigente no encontrada")
+		case errors.Is(err, store.ErrForeignKey):
+			render.Error(w, http.StatusUnprocessableEntity, "equipo no encontrado")
+		default:
+			render.Error(w, http.StatusInternalServerError, "error al actualizar la asignación")
+		}
+		return
+	}
+
+	render.JSON(w, http.StatusOK, updated)
+}
+
 // Create añade un piloto a la temporada.
 // POST /api/v1/admin/temporadas/{id}/pilotos
 func (h *AsignacionHandler) Create(w http.ResponseWriter, r *http.Request) {
