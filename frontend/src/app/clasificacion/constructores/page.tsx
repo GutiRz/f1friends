@@ -1,4 +1,4 @@
-import { getClasificacionConstructores, getTemporadaActivaId } from "@/lib/api/f1friends-api";
+import { getClasificacionConstructores, getTemporadaActivaId, getEquipos } from "@/lib/api/f1friends-api";
 import type { ClasificacionConstructor } from "@/types/clasificacion";
 import TablaClasificacionConstructores from "@/components/clasificacion/tabla-clasificacion-constructores";
 import { parseTemporadaId } from "@/lib/temporada";
@@ -26,6 +26,9 @@ export default async function ClasificacionConstructoresPage({ searchParams }: P
     error = e instanceof Error ? e.message : "Error desconocido";
   }
 
+  const equipos = await getEquipos().catch(() => []);
+  const equipoMap = new Map(equipos.map((e) => [e.id, e]));
+
   return (
     <>
       <PublicNav temporadaId={temporadaId} />
@@ -44,7 +47,7 @@ export default async function ClasificacionConstructoresPage({ searchParams }: P
             No hay resultados disponibles.
           </p>
         ) : (
-          <TablaClasificacionConstructores constructores={constructores} />
+          <TablaClasificacionConstructores constructores={constructores} equipoMap={equipoMap} />
         )}
       </main>
     </>

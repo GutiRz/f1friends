@@ -1,6 +1,7 @@
 import { getPilotosDeTemporada, getTemporadaActivaId, getEquipos } from "@/lib/api/f1friends-api";
 import { parseTemporadaId } from "@/lib/temporada";
 import PublicNav from "@/components/navigation/public-nav";
+import { EquipoNombre } from "@/components/equipos/equipo-nombre";
 
 type Props = {
   searchParams: Promise<{ temporada?: string }>;
@@ -20,7 +21,7 @@ export default async function PilotosPage({ searchParams }: Props) {
     getEquipos().catch(() => []),
   ]);
 
-  const equipoMap = new Map(equipos.map((e) => [e.id, e.nombre]));
+  const equipoMap = new Map(equipos.map((e) => [e.id, e]));
   const titulares = pilotos.filter((p) => p.tipo === "titular");
   const reservas = pilotos.filter((p) => p.tipo === "reserva");
 
@@ -57,7 +58,9 @@ export default async function PilotosPage({ searchParams }: Props) {
                       <td style={td}>{p.numero ?? "—"}</td>
                       <td style={td}>{p.nombre_publico}</td>
                       <td style={td}>
-                        {p.equipo_id ? (equipoMap.get(p.equipo_id) ?? `#${p.equipo_id}`) : "—"}
+                        {p.equipo_id
+                          ? (() => { const eq = equipoMap.get(p.equipo_id); return eq ? <EquipoNombre equipo={eq} /> : `#${p.equipo_id}`; })()
+                          : "—"}
                       </td>
                     </tr>
                   ))}

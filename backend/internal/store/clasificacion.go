@@ -103,12 +103,11 @@ func (s *ClasificacionStore) GetPilotos(ctx context.Context, temporadaID int) ([
 func (s *ClasificacionStore) GetConstructores(ctx context.Context, temporadaID int) ([]model.ClasificacionConstructorRow, error) {
 	rows, err := s.db.Query(ctx, `
 		WITH equipos_temporada AS (
-			-- Todos los equipos con al menos una inscripción en esta temporada.
-			SELECT DISTINCT i.equipo_id, e.nombre AS nombre_equipo
-			FROM inscripciones_gp i
-			JOIN gran_premios gp ON gp.id = i.gran_premio_id
-			JOIN equipos e       ON e.id  = i.equipo_id
-			WHERE gp.temporada_id = $1
+			-- Todos los equipos con al menos un titular asignado a la temporada (vigente).
+			SELECT DISTINCT a.equipo_id, e.nombre AS nombre_equipo
+			FROM asignaciones_piloto a
+			JOIN equipos e ON e.id = a.equipo_id
+			WHERE a.temporada_id = $1 AND a.fecha_hasta IS NULL AND a.equipo_id IS NOT NULL
 		),
 		scoring AS (
 			-- Resultados de sesiones puntuables ya completadas de esta temporada.
