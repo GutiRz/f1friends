@@ -25,7 +25,10 @@ func (s *AsignacionStore) GetVigentesByTemporada(ctx context.Context, temporadaI
 		`SELECT id, piloto_id, temporada_id, equipo_id, tipo
 		 FROM asignaciones_piloto
 		 WHERE temporada_id = $1 AND fecha_hasta IS NULL
-		 ORDER BY tipo, piloto_id`,
+		 ORDER BY
+		   CASE tipo WHEN 'titular' THEN 0 ELSE 1 END,
+		   equipo_id NULLS LAST,
+		   piloto_id`,
 		temporadaID,
 	)
 	if err != nil {
@@ -52,7 +55,10 @@ func (s *AsignacionStore) GetPilotosDeTemporada(ctx context.Context, temporadaID
 		 FROM asignaciones_piloto a
 		 JOIN pilotos p ON p.id = a.piloto_id
 		 WHERE a.temporada_id = $1 AND a.fecha_hasta IS NULL
-		 ORDER BY a.tipo, p.nombre_publico`,
+		 ORDER BY
+		   CASE a.tipo WHEN 'titular' THEN 0 ELSE 1 END,
+		   a.equipo_id NULLS LAST,
+		   p.nombre_publico`,
 		temporadaID,
 	)
 	if err != nil {

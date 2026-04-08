@@ -15,9 +15,21 @@ interface Props {
 
 export function AsignacionesTable({ temporadaId, asignaciones, pilotoMap, equipos }: Props) {
   const router = useRouter();
+  const equipoMap = new Map(equipos.map((e) => [e.id, e.nombre]));
 
   if (asignaciones.length === 0) {
     return <p style={{ color: "#666" }}>No hay pilotos asignados.</p>;
+  }
+
+  const titulares = asignaciones.filter((a) => a.tipo === "titular");
+  const reservas = asignaciones.filter((a) => a.tipo === "reserva");
+
+  // Agrupa titulares por equipo (el backend ya los ordena por equipo_id)
+  const grupos = new Map<number, AsignacionVigente[]>();
+  for (const a of titulares) {
+    const key = a.equipo_id ?? -1;
+    if (!grupos.has(key)) grupos.set(key, []);
+    grupos.get(key)!.push(a);
   }
 
   return (
@@ -31,16 +43,63 @@ export function AsignacionesTable({ temporadaId, asignaciones, pilotoMap, equipo
         </tr>
       </thead>
       <tbody>
-        {asignaciones.map((a) => (
-          <AsignacionRow
-            key={a.id}
-            temporadaId={temporadaId}
-            asignacion={a}
-            pilotoNombre={pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
-            equipos={equipos}
-            onSaved={() => router.refresh()}
-          />
+        {Array.from(grupos.entries()).map(([equipoId, pilotos]) => (
+          <>
+            <tr key={`group-${equipoId}`}>
+              <td
+                colSpan={4}
+                style={{
+                  padding: "6px 12px",
+                  background: "#f5f5f5",
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+                {equipoMap.get(equipoId) ?? "Sin equipo"}
+              </td>
+            </tr>
+            {pilotos.map((a) => (
+              <AsignacionRow
+                key={a.id}
+                temporadaId={temporadaId}
+                asignacion={a}
+                pilotoNombre={pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
+                equipos={equipos}
+                onSaved={() => router.refresh()}
+              />
+            ))}
+          </>
         ))}
+
+        {reservas.length > 0 && (
+          <>
+            <tr key="group-reservas">
+              <td
+                colSpan={4}
+                style={{
+                  padding: "6px 12px",
+                  background: "#f5f5f5",
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
+                Reservas
+              </td>
+            </tr>
+            {reservas.map((a) => (
+              <AsignacionRow
+                key={a.id}
+                temporadaId={temporadaId}
+                asignacion={a}
+                pilotoNombre={pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
+                equipos={equipos}
+                onSaved={() => router.refresh()}
+              />
+            ))}
+          </>
+        )}
       </tbody>
     </table>
   );

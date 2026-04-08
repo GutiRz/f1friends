@@ -2,13 +2,15 @@ import { getPilotosDeTemporada, getTemporadaActivaId, getEquipos } from "@/lib/a
 import { parseTemporadaId } from "@/lib/temporada";
 import PublicNav from "@/components/navigation/public-nav";
 import { EquipoNombre } from "@/components/equipos/equipo-nombre";
+import type { Equipo } from "@/types/equipo";
+import type { PilotoDeTemporada } from "@/lib/api/f1friends-api";
 
 type Props = {
   searchParams: Promise<{ temporada?: string }>;
 };
 
 export const metadata = {
-  title: "Pilotos — F1 Friends",
+  title: "Parrilla — F1 Friends",
 };
 
 export default async function PilotosPage({ searchParams }: Props) {
@@ -25,11 +27,21 @@ export default async function PilotosPage({ searchParams }: Props) {
   const titulares = pilotos.filter((p) => p.tipo === "titular");
   const reservas = pilotos.filter((p) => p.tipo === "reserva");
 
+  // Agrupa titulares por equipo preservando el orden del backend
+  const grupos = new Map<number, { equipo: Equipo | null; pilotos: PilotoDeTemporada[] }>();
+  for (const p of titulares) {
+    const key = p.equipo_id ?? -1;
+    if (!grupos.has(key)) {
+      grupos.set(key, { equipo: p.equipo_id ? (equipoMap.get(p.equipo_id) ?? null) : null, pilotos: [] });
+    }
+    grupos.get(key)!.pilotos.push(p);
+  }
+
   return (
     <>
       <PublicNav temporadaId={temporadaId} />
       <main style={{ padding: "2rem" }}>
-        <h1>Pilotos</h1>
+        <h1>Parrilla</h1>
         <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
           Temporada {temporadaId}
         </p>
@@ -39,55 +51,72 @@ export default async function PilotosPage({ searchParams }: Props) {
             No hay pilotos asignados a esta temporada.
           </p>
         ) : (
-          <>
-            <h2 style={{ marginTop: "1.5rem" }}>Titulares</h2>
-            {titulares.length === 0 ? (
-              <p style={{ color: "#666" }}>—</p>
-            ) : (
-              <table style={{ borderCollapse: "collapse", marginBottom: "1.5rem" }}>
-                <thead>
-                  <tr>
-                    <th style={th}>Nº</th>
-                    <th style={th}>Piloto</th>
-                    <th style={th}>Equipo</th>
+          <table style={{ borderCollapse: "collapse", marginTop: "1.5rem", width: "100%" }}>
+            <thead>
+              <tr>
+                <th style={th}>Nº</th>
+                <th style={th}>Piloto</th>
+                <th style={th}>Equipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from(grupos.values()).map(({ equipo, pilotos: pGroup }, i) => (
+                <>
+                  <tr key={`group-${i}`}>
+                    <td
+                      colSpan={3}
+                      style={{
+                        padding: "6px 12px",
+                        background: equipo?.color ?? "#f0f0f0",
+                        color: equipo?.color ? "#fff" : "#333",
+                        fontWeight: "bold",
+                        fontSize: 13,
+                        borderBottom: "1px solid #ddd",
+                      }}
+                    >
+                      {equipo ? <EquipoNombre equipo={equipo} logoHeight={18} /> : "Sin equipo"}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {titulares.map((p) => (
+                  {pGroup.map((p) => (
                     <tr key={p.piloto_id}>
                       <td style={td}>{p.numero ?? "—"}</td>
                       <td style={td}>{p.nombre_publico}</td>
                       <td style={td}>
-                        {p.equipo_id
-                          ? (() => { const eq = equipoMap.get(p.equipo_id); return eq ? <EquipoNombre equipo={eq} /> : `#${p.equipo_id}`; })()
-                          : "—"}
+                        {equipo ? <EquipoNombre equipo={equipo} logoHeight={20} /> : "—"}
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            )}
+                </>
+              ))}
 
-            <h2>Reservas</h2>
-            {reservas.length === 0 ? (
-              <p style={{ color: "#666" }}>—</p>
-            ) : (
-              <table style={{ borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={th}>Piloto</th>
+              {reservas.length > 0 && (
+                <>
+                  <tr key="group-reservas">
+                    <td
+                      colSpan={3}
+                      style={{
+                        padding: "6px 12px",
+                        background: "#e8e8e8",
+                        fontWeight: "bold",
+                        fontSize: 13,
+                        borderBottom: "1px solid #ddd",
+                        color: "#333",
+                      }}
+                    >
+                      Reservas
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
                   {reservas.map((p) => (
                     <tr key={p.piloto_id}>
+                      <td style={td}>{p.numero ?? "—"}</td>
                       <td style={td}>{p.nombre_publico}</td>
+                      <td style={td}>—</td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            )}
-          </>
+                </>
+              )}
+            </tbody>
+          </table>
         )}
       </main>
     </>
