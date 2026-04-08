@@ -13,195 +13,199 @@ interface Props {
   equipos: Equipo[];
 }
 
-export function AsignacionesTable({ temporadaId, asignaciones, pilotoMap, equipos }: Props) {
-  const router = useRouter();
-  const equipoMap = new Map(equipos.map((e) => [e.id, e.nombre]));
-
-  if (asignaciones.length === 0) {
-    return <p style={{ color: "#666" }}>No hay pilotos asignados.</p>;
-  }
-
-  const titulares = asignaciones.filter((a) => a.tipo === "titular");
-  const reservas = asignaciones.filter((a) => a.tipo === "reserva");
-
-  // Agrupa titulares por equipo (el backend ya los ordena por equipo_id)
-  const grupos = new Map<number, AsignacionVigente[]>();
-  for (const a of titulares) {
-    const key = a.equipo_id ?? -1;
-    if (!grupos.has(key)) grupos.set(key, []);
-    grupos.get(key)!.push(a);
-  }
-
-  return (
-    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-      <thead>
-        <tr>
-          <th style={th}>Piloto</th>
-          <th style={th}>Tipo</th>
-          <th style={th}>Equipo</th>
-          <th style={th}></th>
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from(grupos.entries()).map(([equipoId, pilotos]) => (
-          <>
-            <tr key={`group-${equipoId}`}>
-              <td
-                colSpan={4}
-                style={{
-                  padding: "6px 12px",
-                  background: "#f5f5f5",
-                  fontWeight: "bold",
-                  fontSize: 13,
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                {equipoMap.get(equipoId) ?? "Sin equipo"}
-              </td>
-            </tr>
-            {pilotos.map((a) => (
-              <AsignacionRow
-                key={a.id}
-                temporadaId={temporadaId}
-                asignacion={a}
-                pilotoNombre={pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
-                equipos={equipos}
-                onSaved={() => router.refresh()}
-              />
-            ))}
-          </>
-        ))}
-
-        {reservas.length > 0 && (
-          <>
-            <tr key="group-reservas">
-              <td
-                colSpan={4}
-                style={{
-                  padding: "6px 12px",
-                  background: "#f5f5f5",
-                  fontWeight: "bold",
-                  fontSize: 13,
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                Reservas
-              </td>
-            </tr>
-            {reservas.map((a) => (
-              <AsignacionRow
-                key={a.id}
-                temporadaId={temporadaId}
-                asignacion={a}
-                pilotoNombre={pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
-                equipos={equipos}
-                onSaved={() => router.refresh()}
-              />
-            ))}
-          </>
-        )}
-      </tbody>
-    </table>
-  );
-}
-
-function AsignacionRow({
+export function AsignacionesTable({
   temporadaId,
-  asignacion,
-  pilotoNombre,
+  asignaciones: initialAsignaciones,
+  pilotoMap,
   equipos,
-  onSaved,
-}: {
-  temporadaId: number;
-  asignacion: AsignacionVigente;
-  pilotoNombre: string;
-  equipos: Equipo[];
-  onSaved: () => void;
-}) {
-  const [tipo, setTipo] = useState<"titular" | "reserva">(asignacion.tipo);
-  const [equipoId, setEquipoId] = useState<number | null>(asignacion.equipo_id);
+}: Props) {
+  const router = useRouter();
+  const [asignaciones, setAsignaciones] = useState(initialAsignaciones);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const dirty =
-    tipo !== asignacion.tipo ||
-    equipoId !== asignacion.equipo_id;
+  // Grupos: un bloque por equipo + bloque de reservas
+  const grupos = [
+    ...equipos.map((eq) => ({
+      key: String(eq.id),
+      label: eq.nombre,
+      color: eq.color ?? "#ccc",
+      logo: eq.logo,
+      pilotos: asignaciones.filter(
+        (a) => a.tipo === "titular" && a.equipo_id === eq.id
+      ),
+    })),
+    {
+      key: "reservas",
+      label: "Reservas",
+      color: "#e0e0e0",
+      logo: null as string | null | undefined,
+      pilotos: asignaciones.filter((a) => a.tipo === "reserva"),
+    },
+  ];
 
-  function handleTipoChange(next: "titular" | "reserva") {
-    setTipo(next);
-    if (next === "reserva") setEquipoId(null);
-    setSaved(false);
+  const dragging = draggingId !== null
+    ? asignaciones.find((a) => a.id === draggingId) ?? null
+    : null;
+
+  function handleDragStart(e: React.DragEvent, a: AsignacionVigente) {
+    setDraggingId(a.id);
+    e.dataTransfer.effectAllowed = "move";
   }
 
-  function handleSave() {
-    setError(null);
-    setSaved(false);
+  function handleDragOver(e: React.DragEvent, key: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverKey(key);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    // Solo limpia si salimos del grupo, no de un hijo
+    const related = e.relatedTarget as Node | null;
+    if (!(e.currentTarget as HTMLElement).contains(related)) {
+      setDragOverKey(null);
+    }
+  }
+
+  function handleDrop(e: React.DragEvent, key: string) {
+    e.preventDefault();
+    setDragOverKey(null);
+    if (!dragging) return;
+
+    const isReservas = key === "reservas";
+    const newTipo = isReservas ? ("reserva" as const) : ("titular" as const);
+    const newEquipoId = isReservas ? null : Number(key);
+
+    // Sin cambio real
+    if (newTipo === dragging.tipo && newEquipoId === dragging.equipo_id) {
+      setDraggingId(null);
+      return;
+    }
+
+    // Actualización optimista
+    setAsignaciones((prev) =>
+      prev.map((a) =>
+        a.id === dragging.id
+          ? { ...a, tipo: newTipo, equipo_id: newEquipoId }
+          : a
+      )
+    );
+    const savedPilotoId = dragging.piloto_id;
+    setDraggingId(null);
+
     startTransition(async () => {
-      const res = await editarAsignacion(temporadaId, asignacion.piloto_id, {
-        tipo,
-        equipo_id: equipoId,
+      const res = await editarAsignacion(temporadaId, savedPilotoId, {
+        tipo: newTipo,
+        equipo_id: newEquipoId,
       });
       if (res.ok) {
-        setSaved(true);
-        onSaved();
+        router.refresh(); // sincroniza nuevos IDs del servidor
       } else {
         setError(res.error);
+        router.refresh(); // revierte al estado del servidor
       }
     });
   }
 
+  function handleDragEnd() {
+    setDraggingId(null);
+    setDragOverKey(null);
+  }
+
   return (
-    <tr>
-      <td style={td}>{pilotoNombre}</td>
-      <td style={td}>
-        <select
-          value={tipo}
-          onChange={(e) => handleTipoChange(e.target.value as "titular" | "reserva")}
-          disabled={isPending}
-          style={{ padding: "4px 6px" }}
-        >
-          <option value="titular">Titular</option>
-          <option value="reserva">Reserva</option>
-        </select>
-      </td>
-      <td style={td}>
-        {tipo === "titular" ? (
-          <select
-            value={equipoId ?? ""}
-            onChange={(e) => { setEquipoId(Number(e.target.value) || null); setSaved(false); }}
-            disabled={isPending}
-            style={{ padding: "4px 6px" }}
-          >
-            <option value="">— selecciona —</option>
-            {equipos.map((eq) => (
-              <option key={eq.id} value={eq.id}>{eq.nombre}</option>
-            ))}
-          </select>
-        ) : (
-          <span style={{ color: "#999" }}>—</span>
-        )}
-      </td>
-      <td style={td}>
-        {dirty && (
-          <button onClick={handleSave} disabled={isPending} style={{ marginRight: 8 }}>
-            {isPending ? "Guardando..." : "Guardar"}
-          </button>
-        )}
-        {saved && !dirty && <span style={{ color: "green" }}>✓</span>}
-        {error && <span style={{ color: "red", fontSize: 13 }}>{error}</span>}
-      </td>
-    </tr>
+    <div>
+      {error && (
+        <p style={{ color: "red", marginBottom: 12 }}>
+          {error}{" "}
+          <button onClick={() => setError(null)} style={{ marginLeft: 8 }}>×</button>
+        </p>
+      )}
+      {isPending && (
+        <p style={{ color: "#888", fontSize: 13, marginBottom: 8 }}>Guardando...</p>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {grupos.map(({ key, label, color, logo, pilotos }) => {
+          const isOver = dragOverKey === key;
+
+          return (
+            <div
+              key={key}
+              onDragOver={(e) => handleDragOver(e, key)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, key)}
+              style={{
+                border: isOver ? "2px dashed #555" : "1px solid #ddd",
+                borderRadius: 6,
+                overflow: "hidden",
+                background: isOver ? "#f0f7ff" : "#fff",
+                transition: "background 0.1s, border-color 0.1s",
+              }}
+            >
+              {/* Cabecera del grupo */}
+              <div
+                style={{
+                  padding: "6px 12px",
+                  background: color,
+                  color: key === "reservas" ? "#333" : "#fff",
+                  fontWeight: "bold",
+                  fontSize: 13,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {logo && (
+                  <img
+                    src={logo}
+                    alt={label}
+                    height={16}
+                    style={{ objectFit: "contain" }}
+                  />
+                )}
+                {label}
+                <span style={{ marginLeft: "auto", fontWeight: "normal", opacity: 0.8 }}>
+                  {pilotos.length}
+                </span>
+              </div>
+
+              {/* Pilotos del grupo */}
+              <div style={{ minHeight: 36 }}>
+                {pilotos.length === 0 ? (
+                  <p style={{ margin: 0, padding: "8px 12px", color: "#bbb", fontSize: 13 }}>
+                    {draggingId ? "Soltar aquí" : "—"}
+                  </p>
+                ) : (
+                  pilotos.map((a) => (
+                    <div
+                      key={a.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, a)}
+                      onDragEnd={handleDragEnd}
+                      style={{
+                        padding: "7px 12px",
+                        borderBottom: "1px solid #f0f0f0",
+                        cursor: "grab",
+                        userSelect: "none",
+                        opacity: draggingId === a.id ? 0.35 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        background: "#fff",
+                      }}
+                    >
+                      <span style={{ color: "#ccc", fontSize: 14, lineHeight: 1 }}>⠿</span>
+                      {pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px 12px",
-  borderBottom: "2px solid #ccc",
-};
-
-const td: React.CSSProperties = {
-  padding: "8px 12px",
-  borderBottom: "1px solid #eee",
-};

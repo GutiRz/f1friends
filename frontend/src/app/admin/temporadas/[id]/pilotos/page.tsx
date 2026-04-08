@@ -54,7 +54,7 @@ export default async function AdminTemporadaPilotosPage({
         pilotosAsignados={pilotosAsignados}
       />
 
-      <h2>Parrilla ({asignaciones.length})</h2>
+      <h2>Parrilla</h2>
       <AsignacionesTable
         temporadaId={temporadaId}
         asignaciones={asignaciones}
