@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { getPilotosDeTemporada, getTemporadaActivaId, getEquipos } from "@/lib/api/f1friends-api";
 import { parseTemporadaId } from "@/lib/temporada";
 import PublicNav from "@/components/navigation/public-nav";
@@ -60,9 +61,9 @@ export default async function PilotosPage({ searchParams }: Props) {
               </tr>
             </thead>
             <tbody>
-              {Array.from(grupos.values()).map(({ equipo, pilotos: pGroup }, i) => (
-                <>
-                  <tr key={`group-${i}`}>
+              {Array.from(grupos.values()).map(({ equipo, pilotos: pGroup }) => (
+                <Fragment key={equipo?.id ?? -1}>
+                  <tr>
                     <td
                       colSpan={3}
                       style={{
@@ -86,12 +87,12 @@ export default async function PilotosPage({ searchParams }: Props) {
                       </td>
                     </tr>
                   ))}
-                </>
+                </Fragment>
               ))}
 
               {reservas.length > 0 && (
-                <>
-                  <tr key="group-reservas">
+                <Fragment key="reservas">
+                  <tr>
                     <td
                       colSpan={3}
                       style={{
@@ -113,7 +114,7 @@ export default async function PilotosPage({ searchParams }: Props) {
                       <td style={td}>—</td>
                     </tr>
                   ))}
-                </>
+                </Fragment>
               )}
             </tbody>
           </table>
