@@ -30,11 +30,15 @@ export function NuevaAsignacionForm({ temporadaId, pilotos, equipos, pilotosAsig
     const equipoRaw = (form.elements.namedItem("equipo_id") as HTMLSelectElement)?.value;
     const equipoId = tipo === "titular" && equipoRaw ? Number(equipoRaw) : null;
 
+    const ordenRaw = (form.elements.namedItem("orden") as HTMLInputElement)?.value;
+    const orden = Math.max(1, Number(ordenRaw) || 1);
+
     startTransition(async () => {
       const res = await crearAsignacion(temporadaId, {
         piloto_id: pilotoId,
         equipo_id: equipoId,
         tipo,
+        orden,
       });
       if (res.ok) {
         (e.target as HTMLFormElement).reset();
@@ -82,6 +86,17 @@ export function NuevaAsignacionForm({ temporadaId, pilotos, equipos, pilotosAsig
           </select>
         </label>
       )}
+
+      <label style={labelStyle}>
+        Orden
+        <input
+          name="orden"
+          type="number"
+          min={1}
+          defaultValue={1}
+          style={{ ...selectStyle, width: 70 }}
+        />
+      </label>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {error && <span style={{ color: "red", fontSize: 13 }}>{error}</span>}

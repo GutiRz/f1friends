@@ -19,16 +19,16 @@ func NewAsignacionStore(db *pgxpool.Pool) *AsignacionStore {
 }
 
 // GetVigentesByTemporada devuelve las asignaciones activas de una temporada
-// (aquellas con fecha_hasta IS NULL), ordenadas por tipo y piloto_id.
+// (aquellas con fecha_hasta IS NULL), ordenadas por tipo, equipo y orden.
 func (s *AsignacionStore) GetVigentesByTemporada(ctx context.Context, temporadaID int) ([]model.AsignacionVigente, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT id, piloto_id, temporada_id, equipo_id, tipo
+		`SELECT id, piloto_id, temporada_id, equipo_id, tipo, orden
 		 FROM asignaciones_piloto
 		 WHERE temporada_id = $1 AND fecha_hasta IS NULL
 		 ORDER BY
 		   CASE tipo WHEN 'titular' THEN 0 ELSE 1 END,
 		   equipo_id NULLS LAST,
-		   piloto_id`,
+		   orden`,
 		temporadaID,
 	)
 	if err != nil {
@@ -39,7 +39,7 @@ func (s *AsignacionStore) GetVigentesByTemporada(ctx context.Context, temporadaI
 	asignaciones := make([]model.AsignacionVigente, 0)
 	for rows.Next() {
 		var a model.AsignacionVigente
-		if err := rows.Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo); err != nil {
+		if err := rows.Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo, &a.Orden); err != nil {
 			return nil, fmt.Errorf("asignaciones GetVigentesByTemporada scan: %w", err)
 		}
 		asignaciones = append(asignaciones, a)
@@ -48,17 +48,17 @@ func (s *AsignacionStore) GetVigentesByTemporada(ctx context.Context, temporadaI
 }
 
 // GetPilotosDeTemporada devuelve los pilotos asignados a una temporada con nombre y tipo,
-// ordenados por tipo y nombre_publico.
+// ordenados por tipo, equipo y orden.
 func (s *AsignacionStore) GetPilotosDeTemporada(ctx context.Context, temporadaID int) ([]model.PilotoDeTemporada, error) {
 	rows, err := s.db.Query(ctx,
-		`SELECT p.id, p.nombre_publico, p.numero, a.tipo, a.equipo_id
+		`SELECT p.id, p.nombre_publico, p.numero, a.tipo, a.equipo_id, a.orden
 		 FROM asignaciones_piloto a
 		 JOIN pilotos p ON p.id = a.piloto_id
 		 WHERE a.temporada_id = $1 AND a.fecha_hasta IS NULL
 		 ORDER BY
 		   CASE a.tipo WHEN 'titular' THEN 0 ELSE 1 END,
 		   a.equipo_id NULLS LAST,
-		   p.nombre_publico`,
+		   a.orden`,
 		temporadaID,
 	)
 	if err != nil {
@@ -69,7 +69,7 @@ func (s *AsignacionStore) GetPilotosDeTemporada(ctx context.Context, temporadaID
 	result := make([]model.PilotoDeTemporada, 0)
 	for rows.Next() {
 		var p model.PilotoDeTemporada
-		if err := rows.Scan(&p.PilotoID, &p.NombrePublico, &p.Numero, &p.Tipo, &p.EquipoID); err != nil {
+		if err := rows.Scan(&p.PilotoID, &p.NombrePublico, &p.Numero, &p.Tipo, &p.EquipoID, &p.Orden); err != nil {
 			return nil, fmt.Errorf("asignaciones GetPilotosDeTemporada scan: %w", err)
 		}
 		result = append(result, p)
@@ -103,11 +103,11 @@ func (s *AsignacionStore) Update(ctx context.Context, temporadaID, pilotoID int,
 
 	// Abre nueva asignación vigente.
 	err = tx.QueryRow(ctx,
-		`INSERT INTO asignaciones_piloto (piloto_id, temporada_id, equipo_id, tipo, fecha_desde)
-		 VALUES ($1, $2, $3, $4, CURRENT_DATE)
-		 RETURNING id, piloto_id, temporada_id, equipo_id, tipo`,
-		pilotoID, temporadaID, a.EquipoID, a.Tipo,
-	).Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo)
+		`INSERT INTO asignaciones_piloto (piloto_id, temporada_id, equipo_id, tipo, orden, fecha_desde)
+		 VALUES ($1, $2, $3, $4, $5, CURRENT_DATE)
+		 RETURNING id, piloto_id, temporada_id, equipo_id, tipo, orden`,
+		pilotoID, temporadaID, a.EquipoID, a.Tipo, a.Orden,
+	).Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo, &a.Orden)
 	if err != nil {
 		if isForeignKeyViolation(err) {
 			return nil, ErrForeignKey
@@ -140,11 +140,11 @@ func (s *AsignacionStore) Create(ctx context.Context, a model.AsignacionVigente)
 	}
 
 	err = s.db.QueryRow(ctx,
-		`INSERT INTO asignaciones_piloto (piloto_id, temporada_id, equipo_id, tipo, fecha_desde)
-		 VALUES ($1, $2, $3, $4, CURRENT_DATE)
-		 RETURNING id, piloto_id, temporada_id, equipo_id, tipo`,
-		a.PilotoID, a.TemporadaID, a.EquipoID, a.Tipo,
-	).Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo)
+		`INSERT INTO asignaciones_piloto (piloto_id, temporada_id, equipo_id, tipo, orden, fecha_desde)
+		 VALUES ($1, $2, $3, $4, $5, CURRENT_DATE)
+		 RETURNING id, piloto_id, temporada_id, equipo_id, tipo, orden`,
+		a.PilotoID, a.TemporadaID, a.EquipoID, a.Tipo, a.Orden,
+	).Scan(&a.ID, &a.PilotoID, &a.TemporadaID, &a.EquipoID, &a.Tipo, &a.Orden)
 	if err != nil {
 		if isForeignKeyViolation(err) {
 			return nil, ErrForeignKey

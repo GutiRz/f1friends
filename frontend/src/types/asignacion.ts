@@ -4,4 +4,5 @@ export interface AsignacionVigente {
   temporada_id: number;
   equipo_id: number | null;
   tipo: "titular" | "reserva";
+  orden: number;
 }

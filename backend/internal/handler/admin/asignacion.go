@@ -24,9 +24,10 @@ func NewAsignacionHandler(svc *service.AsignacionService) *AsignacionHandler {
 }
 
 type asignacionRequest struct {
-	PilotoID int  `json:"piloto_id"`
-	EquipoID *int `json:"equipo_id"`
+	PilotoID int    `json:"piloto_id"`
+	EquipoID *int   `json:"equipo_id"`
 	Tipo     string `json:"tipo"`
+	Orden    int    `json:"orden"`
 }
 
 // GetVigentes devuelve las asignaciones vigentes de una temporada.
@@ -67,9 +68,14 @@ func (h *AsignacionHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orden := req.Orden
+	if orden < 1 {
+		orden = 1
+	}
 	a := model.AsignacionVigente{
 		EquipoID: req.EquipoID,
 		Tipo:     req.Tipo,
+		Orden:    orden,
 	}
 
 	updated, err := h.svc.Update(r.Context(), temporadaID, pilotoID, a)
@@ -106,11 +112,16 @@ func (h *AsignacionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	orden := req.Orden
+	if orden < 1 {
+		orden = 1
+	}
 	a := model.AsignacionVigente{
 		PilotoID:    req.PilotoID,
 		TemporadaID: temporadaID,
 		EquipoID:    req.EquipoID,
 		Tipo:        req.Tipo,
+		Orden:       orden,
 	}
 
 	created, err := h.svc.Create(r.Context(), a)

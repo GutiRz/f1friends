@@ -177,7 +177,16 @@ export default async function PilotosPage({ searchParams }: Props) {
                   <div
                     key={equipo?.id ?? -1}
                     className="team-card"
-                    style={{ background: color }}
+                    style={{
+                      background: `
+                        linear-gradient(135deg,
+                          rgba(255,255,255,0.22) 0%,
+                          rgba(255,255,255,0.04) 45%,
+                          rgba(0,0,0,0.28) 100%
+                        ),
+                        ${color}
+                      `
+                    }}
                   >
                     {/* Info superior */}
                     <div className="team-card-inner">

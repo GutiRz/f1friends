@@ -11,6 +11,7 @@ export async function crearAsignacion(
     piloto_id: number;
     equipo_id: number | null;
     tipo: "titular" | "reserva";
+    orden: number;
   }
 ): Promise<ActionResult> {
   let res: Response;
@@ -42,6 +43,7 @@ export async function editarAsignacion(
   data: {
     equipo_id: number | null;
     tipo: "titular" | "reserva";
+    orden: number;
   }
 ): Promise<ActionResult> {
   let res: Response;

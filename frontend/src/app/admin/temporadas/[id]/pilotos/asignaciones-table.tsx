@@ -69,6 +69,26 @@ export function AsignacionesTable({
     }
   }
 
+  function handleOrdenChange(a: AsignacionVigente, newOrden: number) {
+    if (newOrden < 1 || newOrden === a.orden) return;
+    setAsignaciones((prev) =>
+      prev.map((x) => (x.id === a.id ? { ...x, orden: newOrden } : x))
+    );
+    startTransition(async () => {
+      const res = await editarAsignacion(temporadaId, a.piloto_id, {
+        tipo: a.tipo,
+        equipo_id: a.equipo_id,
+        orden: newOrden,
+      });
+      if (!res.ok) {
+        setError(res.error);
+        router.refresh();
+      } else {
+        router.refresh();
+      }
+    });
+  }
+
   function handleDrop(e: React.DragEvent, key: string) {
     e.preventDefault();
     setDragOverKey(null);
@@ -84,11 +104,19 @@ export function AsignacionesTable({
       return;
     }
 
+    // Al cambiar de grupo, el orden pasa a ser el último del nuevo grupo + 1
+    const newGrupoCount = asignaciones.filter((a) =>
+      isReservas
+        ? a.tipo === "reserva"
+        : a.tipo === "titular" && a.equipo_id === newEquipoId
+    ).length;
+    const newOrden = newGrupoCount + 1;
+
     // Actualización optimista
     setAsignaciones((prev) =>
       prev.map((a) =>
         a.id === dragging.id
-          ? { ...a, tipo: newTipo, equipo_id: newEquipoId }
+          ? { ...a, tipo: newTipo, equipo_id: newEquipoId, orden: newOrden }
           : a
       )
     );
@@ -99,6 +127,7 @@ export function AsignacionesTable({
       const res = await editarAsignacion(temporadaId, savedPilotoId, {
         tipo: newTipo,
         equipo_id: newEquipoId,
+        orden: newOrden,
       });
       if (res.ok) {
         router.refresh(); // sincroniza nuevos IDs del servidor
@@ -197,7 +226,25 @@ export function AsignacionesTable({
                       }}
                     >
                       <span style={{ color: "#ccc", fontSize: 14, lineHeight: 1 }}>⠿</span>
-                      {pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
+                      <span style={{ flex: 1 }}>{pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={a.orden}
+                        title="Orden"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onChange={(e) => handleOrdenChange(a, Number(e.target.value))}
+                        style={{
+                          width: 46,
+                          padding: "2px 4px",
+                          fontSize: 12,
+                          border: "1px solid #ddd",
+                          borderRadius: 4,
+                          textAlign: "center",
+                          cursor: "auto",
+                        }}
+                      />
                     </div>
                   ))
                 )}
