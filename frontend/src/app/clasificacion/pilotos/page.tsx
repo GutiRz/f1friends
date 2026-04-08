@@ -1,4 +1,4 @@
-import { getClasificacionPilotos, getTemporadaActivaId } from "@/lib/api/f1friends-api";
+import { getClasificacionPilotos, getTemporadaActivaId, getPilotosDeTemporada, getEquipos } from "@/lib/api/f1friends-api";
 import type { ClasificacionPiloto } from "@/types/clasificacion";
 import TablaClasificacionPilotos from "@/components/clasificacion/tabla-clasificacion-pilotos";
 import { parseTemporadaId } from "@/lib/temporada";
@@ -26,6 +26,20 @@ export default async function ClasificacionPilotosPage({ searchParams }: Props) 
     error = e instanceof Error ? e.message : "Error desconocido";
   }
 
+  const [pilotosTemporada, equipos] = await Promise.all([
+    getPilotosDeTemporada(temporadaId).catch(() => []),
+    getEquipos().catch(() => []),
+  ]);
+
+  const equipoById = new Map(equipos.map((e) => [e.id, e]));
+  // piloto_id → Equipo
+  const pilotoEquipoMap = new Map(
+    pilotosTemporada
+      .filter((p) => p.equipo_id != null)
+      .map((p) => [p.piloto_id, equipoById.get(p.equipo_id!)!])
+      .filter(([, eq]) => eq != null)
+  );
+
   return (
     <>
       <PublicNav temporadaId={temporadaId} />
@@ -44,7 +58,7 @@ export default async function ClasificacionPilotosPage({ searchParams }: Props) 
             No hay resultados disponibles.
           </p>
         ) : (
-          <TablaClasificacionPilotos pilotos={pilotos} />
+          <TablaClasificacionPilotos pilotos={pilotos} pilotoEquipoMap={pilotoEquipoMap} />
         )}
       </main>
     </>

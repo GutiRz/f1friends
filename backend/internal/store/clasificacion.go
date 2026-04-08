@@ -31,7 +31,7 @@ func (s *ClasificacionStore) GetPilotos(ctx context.Context, temporadaID int) ([
 	rows, err := s.db.Query(ctx, `
 		WITH pilotos_temporada AS (
 			-- Todos los pilotos asignados a la temporada (vigentes).
-			SELECT a.piloto_id, p.nombre_publico
+			SELECT a.piloto_id, p.nombre_publico, a.tipo
 			FROM asignaciones_piloto a
 			JOIN pilotos p ON p.id = a.piloto_id
 			WHERE a.temporada_id = $1 AND a.fecha_hasta IS NULL
@@ -64,11 +64,12 @@ func (s *ClasificacionStore) GetPilotos(ctx context.Context, temporadaID int) ([
 			COUNT(sc.posicion) FILTER (WHERE sc.posicion = 10)::int      AS pos10
 		FROM pilotos_temporada pt
 		LEFT JOIN scoring sc ON sc.piloto_id = pt.piloto_id
-		GROUP BY pt.piloto_id, pt.nombre_publico
+		GROUP BY pt.piloto_id, pt.nombre_publico, pt.tipo
 		ORDER BY
 			puntos_totales DESC,
 			pos1 DESC, pos2 DESC, pos3 DESC, pos4 DESC, pos5 DESC,
 			pos6 DESC, pos7 DESC, pos8 DESC, pos9 DESC, pos10 DESC,
+			CASE pt.tipo WHEN 'titular' THEN 0 ELSE 1 END,
 			pt.nombre_publico ASC
 	`, temporadaID)
 	if err != nil {
