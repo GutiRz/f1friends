@@ -2,7 +2,7 @@
 --
 -- Colores: color principal del coche/equipo según identidad visual oficial.
 -- Logos: rutas locales relativas al directorio public del frontend.
---        Los archivos JPG están en frontend/public/images/equipos/.
+--        Los archivos AVIF están en frontend/public/images/equipos/.
 --        Reemplazables desde admin con la URL real cuando se disponga de los logos.
 --
 -- Ejecutar:
@@ -11,14 +11,14 @@
 -- Idempotente: ON CONFLICT (nombre) DO UPDATE actualiza color y logo.
 
 INSERT INTO equipos (nombre, color, logo) VALUES
-  ('Red Bull Racing', '#3671C6', '/images/equipos/red-bull.jpg'),
-  ('Ferrari',         '#E8002D', '/images/equipos/ferrari.jpg'),
-  ('McLaren',         '#FF8000', '/images/equipos/mclaren.jpg'),
-  ('Mercedes',        '#27F4D2', '/images/equipos/mercedes.jpg'),
-  ('Aston Martin',    '#229971', '/images/equipos/aston-martin.jpg'),
-  ('Alpine',          '#0093CC', '/images/equipos/alpine.jpg'),
-  ('Haas',            '#B6BABD', '/images/equipos/haas.jpg'),
-  ('RB',              '#6692FF', '/images/equipos/rb.jpg'),
-  ('Williams',        '#64C4FF', '/images/equipos/williams.jpg'),
-  ('Sauber',          '#52E252', '/images/equipos/sauber.jpg')
+  ('Red Bull Racing', '#3671C6', '/images/equipos/red-bull.avif'),
+  ('Ferrari',         '#E8002D', '/images/equipos/ferrari.avif'),
+  ('McLaren',         '#FF8000', '/images/equipos/mclaren.avif'),
+  ('Mercedes',        '#27F4D2', '/images/equipos/mercedes.avif'),
+  ('Aston Martin',    '#229971', '/images/equipos/aston-martin.avif'),
+  ('Alpine',          '#0093CC', '/images/equipos/alpine.avif'),
+  ('Haas',            '#B6BABD', '/images/equipos/haas.avif'),
+  ('RB',              '#6692FF', '/images/equipos/rb.avif'),
+  ('Williams',        '#64C4FF', '/images/equipos/williams.avif'),
+  ('Sauber',          '#52E252', '/images/equipos/sauber.avif')
 ON CONFLICT (nombre) DO UPDATE SET color = EXCLUDED.color, logo = EXCLUDED.logo;

@@ -10,8 +10,7 @@ export default function PublicNav({ temporadaId }: Props) {
       <Link href="/">Inicio</Link>
       <Link href={`/grandes-premios?temporada=${temporadaId}`}>Grandes Premios</Link>
       <Link href={`/pilotos?temporada=${temporadaId}`}>Parrilla</Link>
-      <Link href={`/clasificacion/pilotos?temporada=${temporadaId}`}>Clasificación Pilotos</Link>
-      <Link href={`/clasificacion/constructores?temporada=${temporadaId}`}>Clasificación Constructores</Link>
+      <Link href={`/clasificacion?temporada=${temporadaId}`}>Clasificación</Link>
     </nav>
   );
 }
