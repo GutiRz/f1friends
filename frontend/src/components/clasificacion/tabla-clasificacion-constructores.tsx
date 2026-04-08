@@ -9,7 +9,7 @@ type Props = {
 
 export default function TablaClasificacionConstructores({ constructores, equipoMap }: Props) {
   return (
-    <div style={{ marginTop: "1rem", overflowX: "auto" }}>
+    <div style={{ marginTop: "1rem", overflowX: "auto", width: "100%" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
         <thead>
           <tr>

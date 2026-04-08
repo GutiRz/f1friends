@@ -58,7 +58,7 @@ export default async function ClasificacionPage({ searchParams }: Props) {
   return (
     <>
       <PublicNav temporadaId={temporadaId} />
-      <main style={{ padding: "2rem", maxWidth: 860, margin: "0 auto" }}>
+      <main style={{ padding: "2rem", width: "min(860px, 100%)", margin: "0 auto", boxSizing: "border-box" }}>
         <h1 style={{ margin: 0 }}>Clasificación</h1>
         <p style={{ marginTop: "0.25rem", color: "#9ca3af", fontSize: "0.85rem" }}>
           Temporada {temporadaId}

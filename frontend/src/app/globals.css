@@ -5,7 +5,7 @@
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-titillium), Arial, Helvetica, sans-serif;
   background: #15151e;
   color: #f0f0f0;
   line-height: 1.5;
@@ -32,11 +32,12 @@ th {
   background: #1e1e2a;
 }
 
-/* Admin: fondo claro para no romper las páginas de gestión */
+/* Admin: fondo claro y fuente neutra para no romper las páginas de gestión */
 .admin-root {
   background: #ffffff;
   color: #171717;
   min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .admin-root th {

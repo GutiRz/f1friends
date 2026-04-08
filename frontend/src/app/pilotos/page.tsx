@@ -78,9 +78,9 @@ export default async function PilotosPage({ searchParams }: Props) {
         }
         .team-name {
           color: #fff;
-          font-weight: 900;
+          font-weight: 700;
           font-size: 1.25rem;
-          letter-spacing: -0.3px;
+          letter-spacing: 0;
           text-shadow: 0 1px 4px rgba(0,0,0,0.3);
           margin: 0 0 8px;
           line-height: 1.2;
@@ -99,16 +99,18 @@ export default async function PilotosPage({ searchParams }: Props) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: rgba(255,255,255,0.95);
-          font-size: 0.92rem;
-          font-weight: 600;
-          text-shadow: 0 1px 3px rgba(0,0,0,0.3);
           margin-right: 16px;
         }
         .driver-pill-num {
           font-weight: 700;
-          opacity: 0.65;
           font-size: 0.8rem;
+          color: rgba(255,255,255,0.45);
+        }
+        .driver-pill-name {
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: rgba(255,255,255,0.95);
+          text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         .team-car-area {
           position: relative;
@@ -196,8 +198,12 @@ export default async function PilotosPage({ searchParams }: Props) {
                         <div>
                           {pGroup.map((p) => (
                             <span key={p.piloto_id} className="driver-pill">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)" style={{ flexShrink: 0 }}>
+                                <circle cx="12" cy="7" r="4"/>
+                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                              </svg>
                               {p.numero && <span className="driver-pill-num">{p.numero}</span>}
-                              {p.nombre_publico}
+                              <span className="driver-pill-name">{p.nombre_publico}</span>
                             </span>
                           ))}
                         </div>
@@ -235,6 +241,10 @@ export default async function PilotosPage({ searchParams }: Props) {
                 <div className="reservas-grid">
                   {reservas.map((p) => (
                     <div key={p.piloto_id} className="reserva-card">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.5)" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="7" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                      </svg>
                       {p.numero && <span className="reserva-num">{p.numero}</span>}
                       <span>{p.nombre_publico}</span>
                     </div>
