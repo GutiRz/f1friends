@@ -59,25 +59,25 @@ export default async function GranPremioPage({ params, searchParams }: Props) {
             No se pudo cargar el gran premio: {gpError}
           </p>
         ) : gp === null ? (
-          <p style={{ color: "#666" }}>Gran premio no encontrado.</p>
+          <p style={{ color: "#9ca3af" }}>Gran premio no encontrado.</p>
         ) : (
           <>
             <h1>{gp.nombre}</h1>
-            <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
+            <p style={{ marginTop: "0.25rem", color: "#9ca3af", fontSize: "0.9rem" }}>
               Temporada {gp.temporada_id}
             </p>
 
             <dl style={{ marginTop: "1.5rem", display: "grid", gridTemplateColumns: "max-content 1fr", gap: "0.5rem 1.5rem" }}>
-              <dt style={{ color: "#666" }}>Ronda</dt>
+              <dt style={{ color: "#9ca3af" }}>Ronda</dt>
               <dd>{gp.orden}</dd>
 
-              <dt style={{ color: "#666" }}>Circuito</dt>
+              <dt style={{ color: "#9ca3af" }}>Circuito</dt>
               <dd>{gp.circuito ?? "—"}</dd>
 
-              <dt style={{ color: "#666" }}>País</dt>
+              <dt style={{ color: "#9ca3af" }}>País</dt>
               <dd>{gp.pais ?? "—"}</dd>
 
-              <dt style={{ color: "#666" }}>Fecha</dt>
+              <dt style={{ color: "#9ca3af" }}>Fecha</dt>
               <dd>
                 {gp.fecha
                   ? new Date(gp.fecha).toLocaleDateString("es-ES", {
@@ -88,10 +88,10 @@ export default async function GranPremioPage({ params, searchParams }: Props) {
                   : "—"}
               </dd>
 
-              <dt style={{ color: "#666" }}>Estado</dt>
+              <dt style={{ color: "#9ca3af" }}>Estado</dt>
               <dd>{ESTADO_LABEL[gp.estado]}</dd>
 
-              <dt style={{ color: "#666" }}>Sprint</dt>
+              <dt style={{ color: "#9ca3af" }}>Sprint</dt>
               <dd>{gp.tiene_sprint ? "Sí" : "No"}</dd>
             </dl>
 

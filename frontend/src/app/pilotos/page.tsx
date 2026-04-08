@@ -145,26 +145,27 @@ export default async function PilotosPage({ searchParams }: Props) {
           display: flex;
           align-items: center;
           gap: 8px;
-          background: #f4f4f4;
+          background: #1e1e2a;
+          border: 1px solid #2e2e3a;
           border-radius: 8px;
           padding: 8px 14px;
           font-size: 0.88rem;
-          color: #333;
+          color: #e0e0e0;
         }
         .reserva-num {
           font-weight: 700;
-          color: #bbb;
+          color: #6b7280;
           font-size: 0.8rem;
         }
       `}</style>
       <main style={{ padding: "2rem", maxWidth: 960, margin: "0 auto" }}>
         <h1 style={{ margin: 0 }}>Parrilla</h1>
-        <p style={{ marginTop: "0.25rem", color: "#888", fontSize: "0.85rem", marginBottom: 0 }}>
+        <p style={{ marginTop: "0.25rem", color: "#9ca3af", fontSize: "0.85rem", marginBottom: 0 }}>
           Temporada {temporadaId}
         </p>
 
         {pilotos.length === 0 ? (
-          <p style={{ marginTop: "1.5rem", color: "#666" }}>
+          <p style={{ marginTop: "1.5rem", color: "#9ca3af" }}>
             No hay pilotos asignados a esta temporada.
           </p>
         ) : (

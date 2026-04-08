@@ -8,7 +8,7 @@ export default async function Home() {
       <PublicNav temporadaId={activaId} />
       <main style={{ padding: "2rem" }}>
         <h1>F1 Friends</h1>
-        <p style={{ marginTop: "0.5rem", color: "#666" }}>
+        <p style={{ marginTop: "0.5rem", color: "#9ca3af" }}>
           Liga privada de Fórmula 1
         </p>
       </main>

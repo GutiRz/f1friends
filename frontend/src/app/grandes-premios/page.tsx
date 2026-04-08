@@ -31,7 +31,7 @@ export default async function GrandesPremiosPage({ searchParams }: Props) {
       <PublicNav temporadaId={temporadaId} />
       <main style={{ padding: "2rem" }}>
         <h1>Grandes Premios</h1>
-        <p style={{ marginTop: "0.25rem", color: "#666", fontSize: "0.9rem" }}>
+        <p style={{ marginTop: "0.25rem", color: "#9ca3af", fontSize: "0.9rem" }}>
           Temporada {temporadaId}
         </p>
 
@@ -40,7 +40,7 @@ export default async function GrandesPremiosPage({ searchParams }: Props) {
             No se pudieron cargar los grandes premios: {error}
           </p>
         ) : grandesPremios.length === 0 ? (
-          <p style={{ marginTop: "1.5rem", color: "#666" }}>
+          <p style={{ marginTop: "1.5rem", color: "#9ca3af" }}>
             No hay grandes premios disponibles.
           </p>
         ) : (
