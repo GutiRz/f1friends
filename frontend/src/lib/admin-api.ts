@@ -4,6 +4,7 @@ import type { Sesion } from "@/types/sesion";
 import type { InscripcionGP } from "@/types/inscripcion";
 import type { Temporada } from "@/types/temporada";
 import type { Piloto } from "@/types/piloto";
+import type { AsignacionVigente } from "@/types/asignacion";
 
 const COOKIE_NAME = "f1friends_token";
 
@@ -128,6 +129,20 @@ export async function getAdminPilotos(): Promise<Piloto[]> {
 
   if (!res.ok) {
     throw new Error(`Error al obtener los pilotos: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getAdminAsignaciones(temporadaId: number): Promise<AsignacionVigente[]> {
+  const res = await adminFetch(`/api/v1/admin/temporadas/${temporadaId}/pilotos`);
+
+  if (res.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!res.ok) {
+    throw new Error(`Error al obtener las asignaciones: ${res.status}`);
   }
 
   return res.json();

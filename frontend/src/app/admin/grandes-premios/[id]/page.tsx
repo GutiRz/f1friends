@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getAdminGranPremio, getAdminSesiones, getAdminInscripciones } from "@/lib/admin-api";
-import { getPilotos, getEquipos } from "@/lib/api/f1friends-api";
+import { getEquipos } from "@/lib/api/f1friends-api";
+import { getAdminPilotos } from "@/lib/admin-api";
 import { parseTemporadaId } from "@/lib/temporada";
 import type { Sesion } from "@/types/sesion";
 import { GranPremioEditForm } from "./edit-form";
@@ -50,7 +51,7 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
     handleFetch(() => getAdminGranPremio(gpId)),
     handleFetch(() => getAdminSesiones(gpId)),
     handleFetch(() => getAdminInscripciones(gpId)),
-    getPilotos(),
+    getAdminPilotos(),
     getEquipos(),
   ]);
 

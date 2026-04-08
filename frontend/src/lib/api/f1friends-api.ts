@@ -23,6 +23,24 @@ export async function getTemporadaActivaId(): Promise<number> {
   }
 }
 
+export interface PilotoDeTemporada {
+  piloto_id: number;
+  nombre_publico: string;
+  numero?: number | null;
+  tipo: "titular" | "reserva";
+  equipo_id?: number | null;
+}
+
+export async function getPilotosDeTemporada(temporadaId: number): Promise<PilotoDeTemporada[]> {
+  const res = await fetch(
+    `${getBaseUrl()}/api/v1/public/temporadas/${temporadaId}/pilotos`
+  );
+  if (!res.ok) {
+    throw new Error(`Error fetching pilotos de temporada: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function getClasificacionPilotos(
   temporadaId: number
 ): Promise<ClasificacionPiloto[]> {

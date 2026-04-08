@@ -30,12 +30,11 @@ func NewClasificacionStore(db *pgxpool.Pool) *ClasificacionStore {
 func (s *ClasificacionStore) GetPilotos(ctx context.Context, temporadaID int) ([]model.ClasificacionPilotoRow, error) {
 	rows, err := s.db.Query(ctx, `
 		WITH pilotos_temporada AS (
-			-- Todos los pilotos con al menos una inscripción en esta temporada.
-			SELECT DISTINCT i.piloto_id, p.nombre_publico
-			FROM inscripciones_gp i
-			JOIN gran_premios gp ON gp.id = i.gran_premio_id
-			JOIN pilotos p       ON p.id  = i.piloto_id
-			WHERE gp.temporada_id = $1
+			-- Todos los pilotos asignados a la temporada (vigentes).
+			SELECT a.piloto_id, p.nombre_publico
+			FROM asignaciones_piloto a
+			JOIN pilotos p ON p.id = a.piloto_id
+			WHERE a.temporada_id = $1 AND a.fecha_hasta IS NULL
 		),
 		scoring AS (
 			-- Resultados de sesiones puntuables ya completadas de esta temporada.

@@ -30,6 +30,9 @@ export default async function AdminTemporadaPage({
         <Link href="/admin/temporadas">← Temporadas</Link>
       </nav>
       <h1>{temporada.nombre}</h1>
+      <p style={{ marginBottom: 24 }}>
+        <Link href={`/admin/temporadas/${numId}/pilotos`}>Gestionar pilotos →</Link>
+      </p>
       <TemporadaEditForm temporada={temporada} />
     </main>
   );
