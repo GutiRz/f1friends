@@ -15,6 +15,11 @@ export default async function AdminPilotosPage() {
 
   return (
     <main style={{ maxWidth: 900, margin: "40px auto", padding: "0 16px" }}>
+      <style>{`
+        .admin-table tbody tr:hover td { background: #f5f5f5; }
+        .admin-table tbody tr { cursor: pointer; }
+        .row-link { display: block; padding: 8px 12px; color: inherit; text-decoration: none; }
+      `}</style>
       <nav style={{ marginBottom: 16 }}>
         <Link href="/admin">← Panel de administración</Link>
       </nav>
@@ -25,32 +30,29 @@ export default async function AdminPilotosPage() {
       {pilotos.length === 0 ? (
         <p>No hay pilotos registrados.</p>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={th}>ID</th>
               <th style={th}>Nombre público</th>
               <th style={th}>Nombre real</th>
               <th style={th}>Nº</th>
               <th style={th}>Nacionalidad</th>
               <th style={th}>Activo</th>
-              <th style={th}></th>
             </tr>
           </thead>
           <tbody>
-            {pilotos.map((p) => (
-              <tr key={p.id}>
-                <td style={td}>{p.id}</td>
-                <td style={td}>{p.nombre_publico}</td>
-                <td style={td}>{p.nombre_real ?? "—"}</td>
-                <td style={td}>{p.numero ?? "—"}</td>
-                <td style={td}>{p.nacionalidad ?? "—"}</td>
-                <td style={td}>{p.activo ? "Sí" : "No"}</td>
-                <td style={td}>
-                  <Link href={`/admin/pilotos/${p.id}`}>Editar</Link>
-                </td>
-              </tr>
-            ))}
+            {pilotos.map((p) => {
+              const href = `/admin/pilotos/${p.id}`;
+              return (
+                <tr key={p.id}>
+                  <td style={td0}><Link href={href} className="row-link">{p.nombre_publico}</Link></td>
+                  <td style={td0}><Link href={href} className="row-link">{p.nombre_real ?? "—"}</Link></td>
+                  <td style={td0}><Link href={href} className="row-link">{p.numero ?? "—"}</Link></td>
+                  <td style={td0}><Link href={href} className="row-link">{p.nacionalidad ?? "—"}</Link></td>
+                  <td style={td0}><Link href={href} className="row-link">{p.activo ? "Sí" : "No"}</Link></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
@@ -64,7 +66,7 @@ const th: React.CSSProperties = {
   borderBottom: "2px solid #ccc",
 };
 
-const td: React.CSSProperties = {
-  padding: "8px 12px",
+const td0: React.CSSProperties = {
   borderBottom: "1px solid #eee",
+  padding: 0,
 };
