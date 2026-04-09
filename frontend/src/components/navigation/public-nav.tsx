@@ -27,7 +27,7 @@ export default function PublicNav({ temporadaId }: Props) {
         />
       </Link>
       <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-        <Link href={`/grandes-premios?temporada=${temporadaId}`}>Grandes Premios</Link>
+        <Link href={`/grandes-premios?temporada=${temporadaId}`}>Calendario</Link>
         <Link href={`/pilotos?temporada=${temporadaId}`}>Parrilla</Link>
         <Link href={`/clasificacion?temporada=${temporadaId}`}>Clasificación</Link>
       </div>
