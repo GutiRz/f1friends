@@ -12,6 +12,7 @@ export const metadata = {
   title: "Parrilla — F1 Friends",
 };
 
+
 /** /images/equipos/red-bull.svg → /images/coches/red-bull.png */
 function getCarImagePath(logo?: string | null): string | null {
   if (!logo) return null;
