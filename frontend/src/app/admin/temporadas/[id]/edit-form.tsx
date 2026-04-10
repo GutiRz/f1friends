@@ -4,6 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveTemporada, activarTemporada } from "./actions";
 import type { Temporada } from "@/types/temporada";
+import {
+  FormCard, FormSection, Field, SaveButton, ActionButton, FormFeedback, FormDivider,
+  adminInputStyle, adminTextareaStyle,
+} from "@/components/admin/form-components";
 
 export function TemporadaEditForm({ temporada }: { temporada: Temporada }) {
   const router = useRouter();
@@ -15,11 +19,8 @@ export function TemporadaEditForm({ temporada }: { temporada: Temporada }) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaveResult(null);
-
     const form = e.currentTarget;
-    const get = (name: string) =>
-      (form.elements.namedItem(name) as HTMLInputElement).value;
-
+    const get = (name: string) => (form.elements.namedItem(name) as HTMLInputElement).value;
     startSave(async () => {
       const res = await saveTemporada(temporada.id, {
         nombre: get("nombre").trim(),
@@ -42,92 +43,62 @@ export function TemporadaEditForm({ temporada }: { temporada: Temporada }) {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <form onSubmit={handleSubmit}>
-        <Field label="Nombre *">
-          <input name="nombre" type="text" required defaultValue={temporada.nombre} style={inputStyle} />
-        </Field>
-        <Field label="Año *">
-          <input
-            name="anio"
-            type="number"
-            required
-            min={2000}
-            max={2100}
-            defaultValue={temporada.anio}
-            style={{ ...inputStyle, width: 100 }}
-          />
-        </Field>
-        <Field label="Descripción">
-          <input name="descripcion" type="text" defaultValue={temporada.descripcion ?? ""} style={inputStyle} />
-        </Field>
-        <Field label="Normativa">
-          <textarea
-            name="normativa"
-            rows={4}
-            defaultValue={temporada.normativa ?? ""}
-            style={{ ...inputStyle, resize: "vertical" }}
-          />
-        </Field>
-        <div style={{ marginTop: 20 }}>
-          {saveResult?.ok === true && (
-            <p style={{ color: "green", margin: "0 0 8px" }}>Guardado correctamente.</p>
-          )}
-          {saveResult?.ok === false && (
-            <p style={{ color: "red", margin: "0 0 8px" }}>{saveResult.error}</p>
-          )}
-          <button type="submit" disabled={isSaving} style={{ padding: "8px 20px" }}>
-            {isSaving ? "Guardando..." : "Guardar"}
-          </button>
-        </div>
-      </form>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <FormCard>
+        <form onSubmit={handleSubmit}>
+          <FormSection title="Datos generales">
+            <Field label="Nombre *">
+              <input name="nombre" type="text" required defaultValue={temporada.nombre} style={adminInputStyle} />
+            </Field>
+            <Field label="Año *">
+              <input name="anio" type="number" required min={2000} max={2100} defaultValue={temporada.anio}
+                style={{ ...adminInputStyle, width: 120 }} />
+            </Field>
+            <Field label="Descripción">
+              <input name="descripcion" type="text" defaultValue={temporada.descripcion ?? ""} style={adminInputStyle} />
+            </Field>
+            <Field label="Normativa">
+              <textarea name="normativa" rows={4} defaultValue={temporada.normativa ?? ""} style={adminTextareaStyle} />
+            </Field>
+          </FormSection>
+          <FormFeedback result={saveResult} />
+          <SaveButton isPending={isSaving} />
+        </form>
+      </FormCard>
 
-      <hr style={{ margin: "32px 0" }} />
-
-      <section>
-        <h2 style={{ marginTop: 0 }}>Temporada activa</h2>
-        <p style={{ marginBottom: 12 }}>
-          Estado actual:{" "}
-          <strong>{temporada.activa ? "Activa" : "Inactiva"}</strong>
-        </p>
-        {!temporada.activa && (
-          <>
-            {activarResult?.ok === false && (
-              <p style={{ color: "red", margin: "0 0 8px" }}>{activarResult.error}</p>
-            )}
-            <button
-              onClick={handleActivar}
-              disabled={isActivating}
-              style={{ padding: "8px 20px" }}
-            >
-              {isActivating ? "Activando..." : "Activar esta temporada"}
-            </button>
-            <p style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
-              La temporada activa actualmente quedará inactiva.
+      <FormCard>
+        <FormSection title="Estado de temporada">
+          <div>
+            <p style={{ margin: "0 0 12px", fontSize: "0.875rem", color: "#374151" }}>
+              Estado actual:{" "}
+              <span style={{
+                display: "inline-block", padding: "2px 8px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 500,
+                background: temporada.activa ? "#dcfce7" : "#f1f5f9",
+                color: temporada.activa ? "#16a34a" : "#64748b",
+              }}>
+                {temporada.activa ? "Activa" : "Inactiva"}
+              </span>
             </p>
-          </>
-        )}
-        {temporada.activa && (
-          <p style={{ color: "green" }}>Esta es la temporada activa actualmente.</p>
-        )}
-      </section>
+            {temporada.activa ? (
+              <p style={{ fontSize: "0.875rem", color: "#16a34a" }}>Esta es la temporada activa actualmente.</p>
+            ) : (
+              <>
+                <FormFeedback result={activarResult} />
+                <ActionButton
+                  onClick={handleActivar}
+                  isPending={isActivating}
+                  label="Activar esta temporada"
+                  pendingLabel="Activando..."
+                  variant="success"
+                />
+                <p style={{ marginTop: 8, fontSize: "0.8rem", color: "#94a3b8" }}>
+                  La temporada activa actualmente quedará inactiva.
+                </p>
+              </>
+            )}
+          </div>
+        </FormSection>
+      </FormCard>
     </div>
   );
 }
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "6px 8px",
-  boxSizing: "border-box",
-};

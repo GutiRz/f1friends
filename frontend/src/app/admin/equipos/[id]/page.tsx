@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
 import { getAdminEquipo } from "@/lib/admin-api";
 import { EquipoEditForm } from "./edit-form";
+import PageHeader from "@/components/admin/page-header";
+import { FormCard } from "@/components/admin/form-components";
 
 export default async function AdminEquipoPage({
   params,
@@ -25,12 +26,11 @@ export default async function AdminEquipoPage({
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href="/admin/equipos">← Equipos</Link>
-      </nav>
-      <h1>{equipo.nombre}</h1>
-      <EquipoEditForm equipo={equipo} />
-    </main>
+    <div style={{ maxWidth: 560 }}>
+      <PageHeader title={equipo.nombre} backHref="/admin/equipos" backLabel="Equipos" />
+      <FormCard>
+        <EquipoEditForm equipo={equipo} />
+      </FormCard>
+    </div>
   );
 }

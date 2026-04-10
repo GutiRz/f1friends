@@ -1,10 +1,12 @@
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
 import { getAdminAsignaciones, getAdminPilotos, getAdminTemporada } from "@/lib/admin-api";
 import { getEquipos } from "@/lib/api/f1friends-api";
 import { NuevaAsignacionForm } from "./nueva-asignacion-form";
 import { AsignacionesTable } from "./asignaciones-table";
 import type { AsignacionVigente } from "@/types/asignacion";
+import PageHeader from "@/components/admin/page-header";
+import { AdminCard } from "@/components/admin/admin-table";
+import { FormCard } from "@/components/admin/form-components";
 
 export default async function AdminTemporadaPilotosPage({
   params,
@@ -40,27 +42,38 @@ export default async function AdminTemporadaPilotosPage({
   const pilotosAsignados = new Set(asignaciones.map((a) => a.piloto_id));
 
   return (
-    <main style={{ maxWidth: 800, margin: "40px auto", padding: "0 16px" }}>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href={`/admin/temporadas/${temporadaId}`}>← {temporada.nombre}</Link>
-      </nav>
-      <h1>Pilotos — {temporada.nombre}</h1>
-
-      <h2 style={{ marginTop: 24 }}>Añadir piloto</h2>
-      <NuevaAsignacionForm
-        temporadaId={temporadaId}
-        pilotos={pilotos}
-        equipos={equipos}
-        pilotosAsignados={pilotosAsignados}
+    <div style={{ maxWidth: 700 }}>
+      <PageHeader
+        title="Parrilla"
+        backHref={`/admin/temporadas/${temporadaId}`}
+        backLabel={temporada.nombre}
       />
 
-      <h2>Parrilla</h2>
-      <AsignacionesTable
-        temporadaId={temporadaId}
-        asignaciones={asignaciones}
-        pilotoMap={pilotoMap}
-        equipos={equipos}
-      />
-    </main>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <FormCard>
+          <h2 style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 14px" }}>
+            Añadir piloto
+          </h2>
+          <NuevaAsignacionForm
+            temporadaId={temporadaId}
+            pilotos={pilotos}
+            equipos={equipos}
+            pilotosAsignados={pilotosAsignados}
+          />
+        </FormCard>
+
+        <div>
+          <h2 style={{ fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 12px" }}>
+            Parrilla
+          </h2>
+          <AsignacionesTable
+            temporadaId={temporadaId}
+            asignaciones={asignaciones}
+            pilotoMap={pilotoMap}
+            equipos={equipos}
+          />
+        </div>
+      </div>
+    </div>
   );
 }

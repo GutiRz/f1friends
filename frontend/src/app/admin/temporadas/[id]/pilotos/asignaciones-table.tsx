@@ -13,240 +13,257 @@ interface Props {
   equipos: Equipo[];
 }
 
-export function AsignacionesTable({
-  temporadaId,
-  asignaciones: initialAsignaciones,
-  pilotoMap,
-  equipos,
-}: Props) {
+export function AsignacionesTable({ temporadaId, asignaciones: initialAsignaciones, pilotoMap, equipos }: Props) {
   const router = useRouter();
   const [asignaciones, setAsignaciones] = useState(initialAsignaciones);
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const [dragOverPilotId, setDragOverPilotId] = useState<number | null>(null);
+  const [dragOverGroupKey, setDragOverGroupKey] = useState<string | null>(null);
+  const [insertBefore, setInsertBefore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Grupos: un bloque por equipo + bloque de reservas
   const grupos = [
     ...equipos.map((eq) => ({
       key: String(eq.id),
       label: eq.nombre,
       color: eq.color ?? "#ccc",
       logo: eq.logo,
-      pilotos: asignaciones.filter(
-        (a) => a.tipo === "titular" && a.equipo_id === eq.id
-      ),
+      pilotos: [...asignaciones.filter((a) => a.tipo === "titular" && a.equipo_id === eq.id)]
+        .sort((a, b) => a.orden - b.orden),
     })),
     {
       key: "reservas",
       label: "Reservas",
       color: "#e0e0e0",
       logo: null as string | null | undefined,
-      pilotos: asignaciones.filter((a) => a.tipo === "reserva"),
+      pilotos: [...asignaciones.filter((a) => a.tipo === "reserva")]
+        .sort((a, b) => a.orden - b.orden),
     },
   ];
 
-  const dragging = draggingId !== null
-    ? asignaciones.find((a) => a.id === draggingId) ?? null
-    : null;
+  const dragging = draggingId !== null ? asignaciones.find((a) => a.id === draggingId) ?? null : null;
 
   function handleDragStart(e: React.DragEvent, a: AsignacionVigente) {
     setDraggingId(a.id);
     e.dataTransfer.effectAllowed = "move";
   }
 
-  function handleDragOver(e: React.DragEvent, key: string) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverKey(key);
+  function handleDragEnd() {
+    setDraggingId(null);
+    setDragOverPilotId(null);
+    setDragOverGroupKey(null);
   }
 
-  function handleDragLeave(e: React.DragEvent) {
-    // Solo limpia si salimos del grupo, no de un hijo
+  // Drag over a pilot row — determine insert before/after based on mouse Y position
+  function handleDragOverPilot(e: React.DragEvent, targetId: number) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "move";
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setInsertBefore(e.clientY < rect.top + rect.height / 2);
+    setDragOverPilotId(targetId);
+    setDragOverGroupKey(null);
+  }
+
+  // Drag over a group container (empty group or outside pilot rows)
+  function handleDragOverGroup(e: React.DragEvent, key: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverGroupKey(key);
+    setDragOverPilotId(null);
+  }
+
+  function handleDragLeaveGroup(e: React.DragEvent) {
     const related = e.relatedTarget as Node | null;
     if (!(e.currentTarget as HTMLElement).contains(related)) {
-      setDragOverKey(null);
+      setDragOverGroupKey(null);
     }
   }
 
-  function handleOrdenChange(a: AsignacionVigente, newOrden: number) {
-    if (newOrden < 1 || newOrden === a.orden) return;
-    setAsignaciones((prev) =>
-      prev.map((x) => (x.id === a.id ? { ...x, orden: newOrden } : x))
-    );
-    startTransition(async () => {
-      const res = await editarAsignacion(temporadaId, a.piloto_id, {
-        tipo: a.tipo,
-        equipo_id: a.equipo_id,
-        orden: newOrden,
+  // Drop on a pilot row
+  function handleDropOnPilot(e: React.DragEvent, target: AsignacionVigente) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPilotId(null);
+    setDragOverGroupKey(null);
+    if (!dragging || dragging.id === target.id) { setDraggingId(null); return; }
+
+    const sameTipo = dragging.tipo === target.tipo;
+    const sameEquipo = dragging.equipo_id === target.equipo_id;
+    const sameGroup = sameTipo && sameEquipo;
+
+    if (sameGroup) {
+      // Reorder within group
+      const grupo = asignaciones
+        .filter((a) => a.tipo === dragging.tipo && a.equipo_id === dragging.equipo_id)
+        .sort((a, b) => a.orden - b.orden);
+
+      const fromIdx = grupo.findIndex((a) => a.id === dragging.id);
+      const toIdx = grupo.findIndex((a) => a.id === target.id);
+      if (fromIdx === -1 || toIdx === -1) { setDraggingId(null); return; }
+
+      const reordered = [...grupo];
+      reordered.splice(fromIdx, 1);
+      const insertAt = insertBefore ? toIdx : toIdx + 1;
+      reordered.splice(Math.max(0, fromIdx < toIdx ? insertAt - 1 : insertAt), 0, dragging);
+
+      const withNewOrdenes = reordered.map((a, i) => ({ ...a, orden: i + 1 }));
+      const changed = withNewOrdenes.filter((a) => {
+        const orig = asignaciones.find((x) => x.id === a.id);
+        return orig && orig.orden !== a.orden;
       });
-      if (!res.ok) {
-        setError(res.error);
+
+      setAsignaciones((prev) => prev.map((a) => withNewOrdenes.find((x) => x.id === a.id) ?? a));
+      setDraggingId(null);
+
+      startTransition(async () => {
+        for (const a of changed) {
+          const res = await editarAsignacion(temporadaId, a.piloto_id, { tipo: a.tipo, equipo_id: a.equipo_id, orden: a.orden });
+          if (!res.ok) { setError(res.error); router.refresh(); return; }
+        }
         router.refresh();
-      } else {
+      });
+    } else {
+      // Move to target's group, insert at target's position
+      const isReservas = target.tipo === "reserva";
+      const newTipo = isReservas ? ("reserva" as const) : ("titular" as const);
+      const newEquipoId = isReservas ? null : target.equipo_id;
+      const newOrden = insertBefore ? target.orden : target.orden + 1;
+
+      setAsignaciones((prev) =>
+        prev.map((a) => a.id === dragging.id ? { ...a, tipo: newTipo, equipo_id: newEquipoId, orden: newOrden } : a)
+      );
+      setDraggingId(null);
+
+      startTransition(async () => {
+        const res = await editarAsignacion(temporadaId, dragging.piloto_id, { tipo: newTipo, equipo_id: newEquipoId, orden: newOrden });
+        if (!res.ok) { setError(res.error); }
         router.refresh();
-      }
-    });
+      });
+    }
   }
 
-  function handleDrop(e: React.DragEvent, key: string) {
+  // Drop on group container (empty group or bottom area)
+  function handleDropOnGroup(e: React.DragEvent, key: string) {
     e.preventDefault();
-    setDragOverKey(null);
+    setDragOverGroupKey(null);
     if (!dragging) return;
 
     const isReservas = key === "reservas";
     const newTipo = isReservas ? ("reserva" as const) : ("titular" as const);
     const newEquipoId = isReservas ? null : Number(key);
 
-    // Sin cambio real
-    if (newTipo === dragging.tipo && newEquipoId === dragging.equipo_id) {
-      setDraggingId(null);
-      return;
-    }
+    if (newTipo === dragging.tipo && newEquipoId === dragging.equipo_id) { setDraggingId(null); return; }
 
-    // Al cambiar de grupo, el orden pasa a ser el último del nuevo grupo + 1
-    const newGrupoCount = asignaciones.filter((a) =>
-      isReservas
-        ? a.tipo === "reserva"
-        : a.tipo === "titular" && a.equipo_id === newEquipoId
-    ).length;
-    const newOrden = newGrupoCount + 1;
+    const newOrden = asignaciones.filter((a) =>
+      isReservas ? a.tipo === "reserva" : a.tipo === "titular" && a.equipo_id === newEquipoId
+    ).length + 1;
 
-    // Actualización optimista
     setAsignaciones((prev) =>
-      prev.map((a) =>
-        a.id === dragging.id
-          ? { ...a, tipo: newTipo, equipo_id: newEquipoId, orden: newOrden }
-          : a
-      )
+      prev.map((a) => a.id === dragging.id ? { ...a, tipo: newTipo, equipo_id: newEquipoId, orden: newOrden } : a)
     );
-    const savedPilotoId = dragging.piloto_id;
     setDraggingId(null);
 
     startTransition(async () => {
-      const res = await editarAsignacion(temporadaId, savedPilotoId, {
-        tipo: newTipo,
-        equipo_id: newEquipoId,
-        orden: newOrden,
-      });
-      if (res.ok) {
-        router.refresh(); // sincroniza nuevos IDs del servidor
-      } else {
-        setError(res.error);
-        router.refresh(); // revierte al estado del servidor
-      }
+      const res = await editarAsignacion(temporadaId, dragging.piloto_id, { tipo: newTipo, equipo_id: newEquipoId, orden: newOrden });
+      if (!res.ok) { setError(res.error); }
+      router.refresh();
     });
-  }
-
-  function handleDragEnd() {
-    setDraggingId(null);
-    setDragOverKey(null);
   }
 
   return (
     <div>
       {error && (
-        <p style={{ color: "red", marginBottom: 12 }}>
+        <p style={{ color: "#dc2626", marginBottom: 12, fontSize: "0.875rem" }}>
           {error}{" "}
-          <button onClick={() => setError(null)} style={{ marginLeft: 8 }}>×</button>
+          <button onClick={() => setError(null)} style={{ marginLeft: 8, background: "none", border: "none", cursor: "pointer", color: "#64748b" }}>×</button>
         </p>
       )}
       {isPending && (
-        <p style={{ color: "#888", fontSize: 13, marginBottom: 8 }}>Guardando...</p>
+        <p style={{ color: "#94a3b8", fontSize: "0.8rem", marginBottom: 8 }}>Guardando...</p>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {grupos.map(({ key, label, color, logo, pilotos }) => {
-          const isOver = dragOverKey === key;
+          const isGroupOver = dragOverGroupKey === key;
 
           return (
             <div
               key={key}
-              onDragOver={(e) => handleDragOver(e, key)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, key)}
+              onDragOver={(e) => handleDragOverGroup(e, key)}
+              onDragLeave={handleDragLeaveGroup}
+              onDrop={(e) => handleDropOnGroup(e, key)}
               style={{
-                border: isOver ? "2px dashed #555" : "1px solid #ddd",
-                borderRadius: 6,
+                border: isGroupOver ? "2px dashed #94a3b8" : "1px solid #e2e8f0",
+                borderRadius: 8,
                 overflow: "hidden",
-                background: isOver ? "#f0f7ff" : "#fff",
+                background: isGroupOver ? "#f0f7ff" : "#fff",
                 transition: "background 0.1s, border-color 0.1s",
               }}
             >
-              {/* Cabecera del grupo */}
-              <div
-                style={{
-                  padding: "6px 12px",
-                  background: color,
-                  color: key === "reservas" ? "#333" : "#fff",
-                  fontWeight: "bold",
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                {logo && (
-                  <img
-                    src={logo}
-                    alt={label}
-                    height={16}
-                    style={{ objectFit: "contain" }}
-                  />
-                )}
+              {/* Cabecera */}
+              <div style={{
+                padding: "5px 10px", background: color,
+                color: key === "reservas" ? "#333" : "#fff",
+                fontWeight: 600, fontSize: 12,
+                display: "flex", alignItems: "center", gap: 7,
+              }}>
+                {logo && <img src={logo} alt={label} height={13} style={{ objectFit: "contain" }} />}
                 {label}
-                <span style={{ marginLeft: "auto", fontWeight: "normal", opacity: 0.8 }}>
-                  {pilotos.length}
-                </span>
+                <span style={{ marginLeft: "auto", fontWeight: 400, opacity: 0.75, fontSize: 11 }}>{pilotos.length}</span>
               </div>
 
-              {/* Pilotos del grupo */}
+              {/* Pilotos */}
               <div style={{ minHeight: 36 }}>
                 {pilotos.length === 0 ? (
-                  <p style={{ margin: 0, padding: "8px 12px", color: "#bbb", fontSize: 13 }}>
+                  <p style={{ margin: 0, padding: "8px 12px", color: "#cbd5e1", fontSize: "0.8rem" }}>
                     {draggingId ? "Soltar aquí" : "—"}
                   </p>
                 ) : (
-                  pilotos.map((a) => (
-                    <div
-                      key={a.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, a)}
-                      onDragEnd={handleDragEnd}
-                      style={{
-                        padding: "7px 12px",
-                        borderBottom: "1px solid #f0f0f0",
-                        cursor: "grab",
-                        userSelect: "none",
-                        opacity: draggingId === a.id ? 0.35 : 1,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        background: "#fff",
-                      }}
-                    >
-                      <span style={{ color: "#ccc", fontSize: 14, lineHeight: 1 }}>⠿</span>
-                      <span style={{ flex: 1 }}>{pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}</span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={a.orden}
-                        title="Orden"
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onChange={(e) => handleOrdenChange(a, Number(e.target.value))}
-                        style={{
-                          width: 46,
-                          padding: "2px 4px",
-                          fontSize: 12,
-                          border: "1px solid #ddd",
-                          borderRadius: 4,
-                          textAlign: "center",
-                          cursor: "auto",
-                        }}
-                      />
-                    </div>
-                  ))
+                  pilotos.map((a) => {
+                    const isOver = dragOverPilotId === a.id;
+                    const isDragging = draggingId === a.id;
+                    return (
+                      <div key={a.id}>
+                        {/* Indicador de inserción antes */}
+                        {isOver && insertBefore && (
+                          <div style={{ height: 2, background: "#3b82f6", margin: "0 10px" }} />
+                        )}
+                        <div
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, a)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={(e) => handleDragOverPilot(e, a.id)}
+                          onDrop={(e) => handleDropOnPilot(e, a)}
+                          style={{
+                            padding: "8px 12px",
+                            borderBottom: "1px solid #f1f5f9",
+                            cursor: "grab",
+                            userSelect: "none",
+                            opacity: isDragging ? 0.3 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            background: isOver ? "#f8fafc" : "#fff",
+                            transition: "background 0.1s",
+                          }}
+                        >
+                          <span style={{ color: "#cbd5e1", fontSize: 14, cursor: "grab" }}>⠿</span>
+                          <span style={{ flex: 1, fontSize: "0.875rem", color: "#0f172a" }}>
+                            {pilotoMap[a.piloto_id] ?? `#${a.piloto_id}`}
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontVariantNumeric: "tabular-nums" }}>
+                            #{a.orden}
+                          </span>
+                        </div>
+                        {/* Indicador de inserción después */}
+                        {isOver && !insertBefore && (
+                          <div style={{ height: 2, background: "#3b82f6", margin: "0 10px" }} />
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { parseTemporadaId } from "@/lib/temporada";
 import { NuevoGranPremioForm } from "./form";
+import PageHeader from "@/components/admin/page-header";
+import { FormCard } from "@/components/admin/form-components";
 
 interface Props {
   searchParams: Promise<{ temporada?: string }>;
@@ -11,16 +12,15 @@ export default async function NuevoGranPremioPage({ searchParams }: Props) {
   const temporadaId = parseTemporadaId(temporada);
 
   return (
-    <main style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
-      <nav style={{ marginBottom: 24 }}>
-        <Link href={`/admin/grandes-premios?temporada=${temporadaId}`}>
-          ← Grandes Premios
-        </Link>
-      </nav>
-
-      <h1>Nuevo Gran Premio — Temporada {temporadaId}</h1>
-
-      <NuevoGranPremioForm temporadaId={temporadaId} />
-    </main>
+    <div style={{ maxWidth: 560 }}>
+      <PageHeader
+        title={`Nuevo Gran Premio — Temporada ${temporadaId}`}
+        backHref={`/admin/grandes-premios?temporada=${temporadaId}`}
+        backLabel="Grandes Premios"
+      />
+      <FormCard>
+        <NuevoGranPremioForm temporadaId={temporadaId} />
+      </FormCard>
+    </div>
   );
 }

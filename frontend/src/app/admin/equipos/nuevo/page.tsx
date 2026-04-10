@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { crearEquipo } from "./actions";
+import PageHeader from "@/components/admin/page-header";
+import { FormCard, FormSection, Field, FormFeedback, adminInputStyle } from "@/components/admin/form-components";
 
 export default function NuevoEquipoPage() {
   const [error, setError] = useState<string | null>(null);
@@ -11,11 +12,8 @@ export default function NuevoEquipoPage() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-
     const form = e.currentTarget;
-    const get = (name: string) =>
-      (form.elements.namedItem(name) as HTMLInputElement).value.trim();
-
+    const get = (name: string) => (form.elements.namedItem(name) as HTMLInputElement).value.trim();
     startTransition(async () => {
       const res = await crearEquipo({
         nombre: get("nombre"),
@@ -27,41 +25,30 @@ export default function NuevoEquipoPage() {
   }
 
   return (
-    <main style={{ maxWidth: 480, margin: "40px auto", padding: "0 16px" }}>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href="/admin/equipos">← Equipos</Link>
-      </nav>
-      <h1>Nuevo equipo</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <Field label="Nombre *">
-          <input name="nombre" type="text" required style={inputStyle} />
-        </Field>
-        <Field label="Color (ej. #E8002D)">
-          <input name="color" type="text" placeholder="#RRGGBB" style={{ ...inputStyle, width: 140 }} />
-        </Field>
-        <Field label="Logo (URL)">
-          <input name="logo" type="url" style={inputStyle} />
-        </Field>
-        {error && <p style={{ color: "red", margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={isPending} style={{ padding: "8px 16px", alignSelf: "flex-start" }}>
-          {isPending ? "Creando..." : "Crear equipo"}
-        </button>
-      </form>
-    </main>
+    <div style={{ maxWidth: 480 }}>
+      <PageHeader title="Nuevo equipo" backHref="/admin/equipos" backLabel="Equipos" />
+      <FormCard>
+        <form onSubmit={handleSubmit}>
+          <FormSection title="Datos del equipo">
+            <Field label="Nombre *">
+              <input name="nombre" type="text" required style={adminInputStyle} />
+            </Field>
+            <Field label="Color (ej. #E8002D)">
+              <input name="color" type="text" placeholder="#RRGGBB" style={{ ...adminInputStyle, width: 140 }} />
+            </Field>
+            <Field label="Logo (URL)">
+              <input name="logo" type="url" style={adminInputStyle} />
+            </Field>
+          </FormSection>
+          {error && <FormFeedback result={{ ok: false, error }} />}
+          <button type="submit" disabled={isPending} style={{
+            padding: "8px 20px", background: isPending ? "#94a3b8" : "#0f172a",
+            color: "#fff", border: "none", borderRadius: 6, fontSize: "0.875rem", fontWeight: 500, cursor: isPending ? "not-allowed" : "pointer",
+          }}>
+            {isPending ? "Creando..." : "Crear equipo"}
+          </button>
+        </form>
+      </FormCard>
+    </div>
   );
 }
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontWeight: "bold" }}>{label}</span>
-      {children}
-    </label>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  padding: "6px 8px",
-  width: "100%",
-  boxSizing: "border-box",
-};

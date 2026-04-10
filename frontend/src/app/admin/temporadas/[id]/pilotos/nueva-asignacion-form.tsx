@@ -100,7 +100,10 @@ export function NuevaAsignacionForm({ temporadaId, pilotos, equipos, pilotosAsig
 
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {error && <span style={{ color: "red", fontSize: 13 }}>{error}</span>}
-        <button type="submit" disabled={isPending} style={{ padding: "6px 14px" }}>
+        <button type="submit" disabled={isPending} style={{
+          padding: "8px 16px", background: isPending ? "#94a3b8" : "#0f172a",
+          color: "#fff", border: "none", borderRadius: 6, fontSize: "0.875rem", fontWeight: 500, cursor: isPending ? "not-allowed" : "pointer",
+        }}>
           {isPending ? "Añadiendo..." : "Añadir"}
         </button>
       </div>
@@ -111,12 +114,19 @@ export function NuevaAsignacionForm({ temporadaId, pilotos, equipos, pilotosAsig
 const labelStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: 4,
-  fontWeight: "bold",
-  fontSize: 14,
+  gap: 5,
+  fontSize: "0.8rem",
+  fontWeight: 500,
+  color: "#374151",
 };
 
 const selectStyle: React.CSSProperties = {
-  padding: "6px 8px",
+  padding: "8px 10px",
   minWidth: 160,
+  border: "1px solid #e2e8f0",
+  borderRadius: 6,
+  fontSize: "0.875rem",
+  color: "#0f172a",
+  background: "#fff",
+  boxSizing: "border-box",
 };

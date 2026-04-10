@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
 import { getAdminPiloto } from "@/lib/admin-api";
 import { PilotoEditForm } from "./edit-form";
+import PageHeader from "@/components/admin/page-header";
+import { FormCard } from "@/components/admin/form-components";
 
 export default async function AdminPilotoPage({
   params,
@@ -25,12 +26,11 @@ export default async function AdminPilotoPage({
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: "40px auto", padding: "0 16px" }}>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href="/admin/pilotos">← Pilotos</Link>
-      </nav>
-      <h1>{piloto.nombre_publico}</h1>
-      <PilotoEditForm piloto={piloto} />
-    </main>
+    <div style={{ maxWidth: 600 }}>
+      <PageHeader title={piloto.nombre_publico} backHref="/admin/pilotos" backLabel="Pilotos" />
+      <FormCard>
+        <PilotoEditForm piloto={piloto} />
+      </FormCard>
+    </div>
   );
 }

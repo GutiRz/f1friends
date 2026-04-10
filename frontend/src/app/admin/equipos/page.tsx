@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminEquipos } from "@/lib/admin-api";
+import PageHeader from "@/components/admin/page-header";
+import { AdminCard, adminTh, adminTd, adminTableStyles } from "@/components/admin/admin-table";
 
 export default async function AdminEquiposPage() {
   let equipos;
@@ -14,72 +16,59 @@ export default async function AdminEquiposPage() {
   }
 
   return (
-    <main style={{ maxWidth: 700, margin: "40px auto", padding: "0 16px" }}>
-      <style>{`
-        .admin-table tbody tr:hover td { background: #f5f5f5; }
-        .admin-table tbody tr { cursor: pointer; }
-        .row-link { display: block; padding: 8px 12px; color: inherit; text-decoration: none; }
-      `}</style>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href="/admin">← Panel de administración</Link>
-      </nav>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Equipos</h1>
-        <Link href="/admin/equipos/nuevo">+ Nuevo equipo</Link>
-      </div>
+    <div style={{ maxWidth: 480 }}>
+      <style>{adminTableStyles}</style>
+      <PageHeader title="Equipos" newHref="/admin/equipos/nuevo" newLabel="Nuevo equipo" />
       {equipos.length === 0 ? (
-        <p>No hay equipos registrados.</p>
+        <p style={{ color: "#64748b" }}>No hay equipos registrados.</p>
       ) : (
-        <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={th}>ID</th>
-              <th style={th}>Nombre</th>
-              <th style={th}>Color</th>
-              <th style={th}>Logo</th>
-            </tr>
-          </thead>
-          <tbody>
-            {equipos.map((e) => {
-              const href = `/admin/equipos/${e.id}`;
-              return (
-                <tr key={e.id}>
-                  <td style={td0}><Link href={href} className="row-link">{e.id}</Link></td>
-                  <td style={td0}><Link href={href} className="row-link">{e.nombre}</Link></td>
-                  <td style={td0}>
-                    <Link href={href} className="row-link">
-                      {e.color ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ display: "inline-block", width: 14, height: 14, background: e.color, border: "1px solid #ccc", borderRadius: 2 }} />
-                          {e.color}
-                        </span>
-                      ) : "—"}
-                    </Link>
-                  </td>
-                  <td style={td0}>
-                    <Link href={href} className="row-link">
-                      {e.logo ? (
-                        <img src={e.logo} alt={e.nombre} height={28} style={{ objectFit: "contain", display: "block" }} />
-                      ) : "—"}
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <AdminCard>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={adminTh}>Nombre</th>
+                <th style={adminTh}>Color</th>
+                <th style={adminTh}>Logo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {equipos.map((e) => {
+                const href = `/admin/equipos/${e.id}`;
+                return (
+                  <tr key={e.id}>
+                    <td style={adminTd}><Link href={href} className="row-link" style={{ fontWeight: 500 }}>{e.nombre}</Link></td>
+                    <td style={adminTd}>
+                      <Link href={href} className="row-link">
+                        {e.color ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                            <span style={{ display: "inline-block", width: 16, height: 16, background: e.color, borderRadius: 4, border: "1px solid rgba(0,0,0,0.1)" }} />
+                            <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#64748b" }}>{e.color}</span>
+                          </span>
+                        ) : "—"}
+                      </Link>
+                    </td>
+                    <td style={{ ...adminTd, width: 56 }}>
+                      <Link href={href} className="row-link">
+                        {e.logo ? (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", justifyContent: "center",
+                            width: 32, height: 32, borderRadius: "50%",
+                            background: e.color ?? "#ccc",
+                            flexShrink: 0,
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={e.logo} alt={e.nombre} height={18} style={{ objectFit: "contain" }} />
+                          </span>
+                        ) : "—"}
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </AdminCard>
       )}
-    </main>
+    </div>
   );
 }
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px 12px",
-  borderBottom: "2px solid #ccc",
-};
-
-const td0: React.CSSProperties = {
-  borderBottom: "1px solid #eee",
-  padding: 0,
-};

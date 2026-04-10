@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminTemporadas } from "@/lib/admin-api";
+import PageHeader from "@/components/admin/page-header";
+import { AdminCard, adminTh, adminTd, adminTableStyles } from "@/components/admin/admin-table";
 
 export default async function AdminTemporadasPage() {
   let temporadas;
@@ -14,59 +16,52 @@ export default async function AdminTemporadasPage() {
   }
 
   return (
-    <main style={{ maxWidth: 800, margin: "40px auto", padding: "0 16px" }}>
-      <style>{`
-        .admin-table tbody tr:hover td { background: #f5f5f5; }
-        .admin-table tbody tr { cursor: pointer; }
-        .row-link { display: block; padding: 8px 12px; color: inherit; text-decoration: none; }
-      `}</style>
-      <nav style={{ marginBottom: 16 }}>
-        <Link href="/admin">← Panel de administración</Link>
-      </nav>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
-        <h1 style={{ margin: 0 }}>Temporadas</h1>
-        <Link href="/admin/temporadas/nueva">+ Nueva temporada</Link>
-      </div>
+    <div>
+      <style>{adminTableStyles}</style>
+      <PageHeader title="Temporadas" newHref="/admin/temporadas/nueva" newLabel="Nueva temporada" />
       {temporadas.length === 0 ? (
-        <p>No hay temporadas registradas.</p>
+        <p style={{ color: "#64748b" }}>No hay temporadas registradas.</p>
       ) : (
-        <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={th}>ID</th>
-              <th style={th}>Nombre</th>
-              <th style={th}>Año</th>
-              <th style={th}>Activa</th>
-              <th style={th}>Descripción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {temporadas.map((t) => {
-              const href = `/admin/temporadas/${t.id}`;
-              return (
-                <tr key={t.id}>
-                  <td style={td0}><Link href={href} className="row-link">{t.id}</Link></td>
-                  <td style={td0}><Link href={href} className="row-link">{t.nombre}</Link></td>
-                  <td style={td0}><Link href={href} className="row-link">{t.anio}</Link></td>
-                  <td style={td0}><Link href={href} className="row-link">{t.activa ? "Sí" : "No"}</Link></td>
-                  <td style={td0}><Link href={href} className="row-link">{t.descripcion ?? "—"}</Link></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <AdminCard>
+          <table className="admin-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={adminTh}>Nombre</th>
+                <th style={adminTh}>Año</th>
+                <th style={adminTh}>Activa</th>
+                <th style={adminTh}>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {temporadas.map((t) => {
+                const href = `/admin/temporadas/${t.id}`;
+                return (
+                  <tr key={t.id}>
+                    <td style={adminTd}><Link href={href} className="row-link" style={{ fontWeight: 500 }}>{t.nombre}</Link></td>
+                    <td style={adminTd}><Link href={href} className="row-link">{t.anio}</Link></td>
+                    <td style={adminTd}>
+                      <Link href={href} className="row-link">
+                        <span style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          fontSize: "0.75rem",
+                          fontWeight: 500,
+                          background: t.activa ? "#dcfce7" : "#f1f5f9",
+                          color: t.activa ? "#16a34a" : "#64748b",
+                        }}>
+                          {t.activa ? "Activa" : "Inactiva"}
+                        </span>
+                      </Link>
+                    </td>
+                    <td style={adminTd}><Link href={href} className="row-link">{t.descripcion ?? "—"}</Link></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </AdminCard>
       )}
-    </main>
+    </div>
   );
 }
-
-const th: React.CSSProperties = {
-  textAlign: "left",
-  padding: "8px 12px",
-  borderBottom: "2px solid #ccc",
-};
-
-const td0: React.CSSProperties = {
-  borderBottom: "1px solid #eee",
-  padding: 0,
-};
