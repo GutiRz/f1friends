@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   // Skip protection for the login page itself
   if (request.nextUrl.pathname === "/admin/login") {
     return NextResponse.next();

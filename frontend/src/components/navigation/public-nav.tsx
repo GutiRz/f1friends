@@ -22,7 +22,7 @@ export default function PublicNav({ temporadaId }: Props) {
           width={0}
           height={0}
           sizes="200px"
-          style={{ height: 90, width: "auto" }}
+          style={{ height: 48, width: "auto" }}
           priority
         />
       </Link>
