@@ -25,7 +25,7 @@ export default function NuevoEquipoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
       <PageHeader title="Nuevo equipo" backHref="/admin/equipos" backLabel="Equipos" />
       <FormCard>
         <form onSubmit={handleSubmit}>

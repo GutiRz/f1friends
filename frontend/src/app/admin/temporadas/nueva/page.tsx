@@ -28,7 +28,7 @@ export default function NuevaTemporadaPage() {
   }
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <PageHeader title="Nueva temporada" backHref="/admin/temporadas" backLabel="Temporadas" />
       <FormCard>
         <form onSubmit={handleSubmit}>

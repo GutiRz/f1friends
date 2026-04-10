@@ -16,7 +16,7 @@ export default async function AdminEquiposPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
       <style>{adminTableStyles}</style>
       <PageHeader title="Equipos" newHref="/admin/equipos/nuevo" newLabel="Nuevo equipo" />
       {equipos.length === 0 ? (

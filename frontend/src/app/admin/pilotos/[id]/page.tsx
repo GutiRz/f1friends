@@ -26,7 +26,7 @@ export default async function AdminPilotoPage({
   }
 
   return (
-    <div style={{ maxWidth: 600 }}>
+    <div style={{ maxWidth: 600, margin: "0 auto" }}>
       <PageHeader title={piloto.nombre_publico} backHref="/admin/pilotos" backLabel="Pilotos" />
       <FormCard>
         <PilotoEditForm piloto={piloto} />

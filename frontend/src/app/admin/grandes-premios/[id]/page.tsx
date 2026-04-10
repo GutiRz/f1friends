@@ -55,7 +55,7 @@ export default async function AdminGranPremioDetallePage({ params, searchParams 
   ]);
 
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div style={{ maxWidth: 700, margin: "0 auto" }}>
       <style>{adminTableStyles}</style>
       <PageHeader
         title={gp.nombre}

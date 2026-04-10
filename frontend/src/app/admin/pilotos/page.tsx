@@ -16,7 +16,7 @@ export default async function AdminPilotosPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
       <style>{adminTableStyles}</style>
       <PageHeader title="Pilotos" newHref="/admin/pilotos/nuevo" newLabel="Nuevo piloto" />
       {pilotos.length === 0 ? (

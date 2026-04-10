@@ -211,7 +211,6 @@ export function AsignacionesTable({ temporadaId, asignaciones: initialAsignacion
               }}>
                 {logo && <img src={logo} alt={label} height={13} style={{ objectFit: "contain" }} />}
                 {label}
-                <span style={{ marginLeft: "auto", fontWeight: 400, opacity: 0.75, fontSize: 11 }}>{pilotos.length}</span>
               </div>
 
               {/* Pilotos */}

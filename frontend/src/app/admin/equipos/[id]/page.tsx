@@ -26,7 +26,7 @@ export default async function AdminEquipoPage({
   }
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <PageHeader title={equipo.nombre} backHref="/admin/equipos" backLabel="Equipos" />
       <FormCard>
         <EquipoEditForm equipo={equipo} />

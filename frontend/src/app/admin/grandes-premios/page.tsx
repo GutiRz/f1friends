@@ -31,7 +31,7 @@ export default async function AdminGrandesPremiosPage({ searchParams }: Props) {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 960, margin: "0 auto" }}>
       <style>{adminTableStyles}</style>
       <PageHeader
         title={`Grandes Premios — Temporada ${temporadaId}`}

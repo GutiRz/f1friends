@@ -16,7 +16,7 @@ export default async function AdminTemporadasPage() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 480, margin: "0 auto" }}>
       <style>{adminTableStyles}</style>
       <PageHeader title="Temporadas" newHref="/admin/temporadas/nueva" newLabel="Nueva temporada" />
       {temporadas.length === 0 ? (

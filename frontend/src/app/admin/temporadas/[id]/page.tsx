@@ -26,7 +26,7 @@ export default async function AdminTemporadaPage({
   }
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <PageHeader
         title={temporada.nombre}
         backHref="/admin/temporadas"

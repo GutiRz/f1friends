@@ -30,7 +30,7 @@ export default function NuevoPilotoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <PageHeader title="Nuevo piloto" backHref="/admin/pilotos" backLabel="Pilotos" />
       <FormCard>
         <form onSubmit={handleSubmit}>

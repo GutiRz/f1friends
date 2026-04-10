@@ -42,7 +42,7 @@ export default async function AdminTemporadaPilotosPage({
   const pilotosAsignados = new Set(asignaciones.map((a) => a.piloto_id));
 
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div style={{ maxWidth: 700, margin: "0 auto" }}>
       <PageHeader
         title="Parrilla"
         backHref={`/admin/temporadas/${temporadaId}`}

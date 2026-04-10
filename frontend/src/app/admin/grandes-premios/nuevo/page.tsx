@@ -12,7 +12,7 @@ export default async function NuevoGranPremioPage({ searchParams }: Props) {
   const temporadaId = parseTemporadaId(temporada);
 
   return (
-    <div style={{ maxWidth: 560 }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
       <PageHeader
         title={`Nuevo Gran Premio — Temporada ${temporadaId}`}
         backHref={`/admin/grandes-premios?temporada=${temporadaId}`}
